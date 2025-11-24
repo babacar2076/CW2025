@@ -2,8 +2,7 @@ package com.comp2042;
 
 public class GameController implements InputEventListener {
 
-    private Board board = new SimpleBoard(25, 10);
-
+    private Board board = new SimpleBoard(30, 10); //change the width from 25 to 35
     private final GuiController viewGuiController;
 
     public GameController(GuiController c) {
