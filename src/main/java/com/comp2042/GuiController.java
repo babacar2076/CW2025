@@ -1,6 +1,7 @@
 package com.comp2042;
 import javafx.scene.effect.DropShadow;
 import javafx.animation.KeyFrame;
+import javafx.scene.layout.BorderPane;
 import javafx.animation.Timeline;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
@@ -33,6 +34,9 @@ public class GuiController implements Initializable {
     private GridPane gamePanel;
 
     @FXML
+    private javafx.scene.layout.BorderPane gameBoard;
+
+    @FXML
     private Group groupNotification;
 
     @FXML
@@ -42,7 +46,13 @@ public class GuiController implements Initializable {
     private GameOverPanel gameOverPanel;
 
     @FXML
+    private MainMenuPanel mainMenuPanel;
+
+    @FXML
     private Label scoreLabel;
+
+    @FXML
+    private Label currentScoreLabel;
 
     private Rectangle[][] displayMatrix;
 
@@ -88,6 +98,15 @@ public class GuiController implements Initializable {
             }
         });
         gameOverPanel.setVisible(false);
+        gameOverPanel.setOnReturnToMenu(e -> { timeLine.stop(); gameOverPanel.setVisible(false); hideGameElements(); if (mainMenuPanel != null) mainMenuPanel.setVisible(true); isPause.setValue(false); isGameOver.setValue(false); });
+        gameOverPanel.setOnReplay(e -> { timeLine.stop(); gameOverPanel.setVisible(false); eventListener.createNewGame(); gamePanel.requestFocus(); timeLine.play(); isPause.setValue(false); isGameOver.setValue(false); });
+        
+        mainMenuPanel.setVisible(true);
+        mainMenuPanel.setOnNewGame(e -> startNewGame());
+        mainMenuPanel.setOnLevels(e -> {});
+        mainMenuPanel.getControlsButton().setOnAction(e -> mainMenuPanel.toggleControls());
+        
+        hideGameElements();
 
         final Reflection reflection = new Reflection();
         reflection.setFraction(0.8);
@@ -232,8 +251,49 @@ public class GuiController implements Initializable {
         isPause.setValue(Boolean.FALSE);
         isGameOver.setValue(Boolean.FALSE);
     }
+    
 
     public void pauseGame(ActionEvent actionEvent) {
         gamePanel.requestFocus();
+    }
+    
+    private void startNewGame() {
+        if (mainMenuPanel != null) {
+            mainMenuPanel.setVisible(false);
+        }
+        showGameElements();
+        if (eventListener != null && eventListener instanceof GameController) {
+            ((GameController) eventListener).startGame();
+        }
+        gamePanel.requestFocus();
+        if (timeLine != null) {
+            timeLine.play();
+        }
+        isPause.setValue(Boolean.FALSE);
+        isGameOver.setValue(Boolean.FALSE);
+    }
+    
+    private void hideGameElements() {
+        if (gameBoard != null) {
+            gameBoard.setVisible(false);
+        }
+        if (scoreLabel != null) {
+            scoreLabel.setVisible(false);
+        }
+        if (currentScoreLabel != null) {
+            currentScoreLabel.setVisible(false);
+        }
+    }
+    
+    private void showGameElements() {
+        if (gameBoard != null) {
+            gameBoard.setVisible(true);
+        }
+        if (scoreLabel != null) {
+            scoreLabel.setVisible(true);
+        }
+        if (currentScoreLabel != null) {
+            currentScoreLabel.setVisible(true);
+        }
     }
 }
