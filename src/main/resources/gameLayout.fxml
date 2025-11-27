@@ -26,6 +26,8 @@
     
     <Label fx:id="currentScoreLabel" text="Current Score" styleClass="nextBrickLabel" layoutX="225" layoutY="0"/>
     <Label fx:id="scoreLabel" text="0" styleClass="scoreClass" layoutX="225" layoutY="32"/>
+    <Label fx:id="highScoreTextLabel" text="High Score" styleClass="nextBrickLabel" layoutX="225" layoutY="80"/>
+    <Label fx:id="highScoreLabel" text="0" styleClass="scoreClass" layoutX="225" layoutY="112"/>
     <stylesheets>
         <URL value="@window_style.css"/>
     </stylesheets>

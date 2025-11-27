@@ -54,6 +54,14 @@ public class GuiController implements Initializable {
     @FXML
     private Label currentScoreLabel;
 
+    @FXML
+    private Label highScoreLabel;
+
+    @FXML
+    private Label highScoreTextLabel;
+
+    private int highScore = 0;
+
     private Rectangle[][] displayMatrix;
 
     private InputEventListener eventListener;
@@ -98,7 +106,7 @@ public class GuiController implements Initializable {
             }
         });
         gameOverPanel.setVisible(false);
-        gameOverPanel.setOnReturnToMenu(e -> { timeLine.stop(); gameOverPanel.setVisible(false); hideGameElements(); if (mainMenuPanel != null) mainMenuPanel.setVisible(true); isPause.setValue(false); isGameOver.setValue(false); });
+        gameOverPanel.setOnReturnToMenu(e -> { timeLine.stop(); gameOverPanel.setVisible(false); if (eventListener != null && eventListener instanceof GameController) { ((GameController) eventListener).resetGame(); } clearGameDisplay(); hideGameElements(); if (mainMenuPanel != null) mainMenuPanel.setVisible(true); isPause.setValue(false); isGameOver.setValue(false); });
         gameOverPanel.setOnReplay(e -> { timeLine.stop(); gameOverPanel.setVisible(false); eventListener.createNewGame(); gamePanel.requestFocus(); timeLine.play(); isPause.setValue(false); isGameOver.setValue(false); });
         
         mainMenuPanel.setVisible(true);
@@ -181,7 +189,7 @@ public class GuiController implements Initializable {
     }
 
 
-    private void refreshBrick(ViewData brick) {
+    public void refreshBrick(ViewData brick) {
         if (isPause.getValue() == Boolean.FALSE) {
             brickPanel.setLayoutX(gamePanel.getLayoutX() + brick.getxPosition() * brickPanel.getVgap() + brick.getxPosition() * BRICK_SIZE);
             brickPanel.setLayoutY(-42 + gamePanel.getLayoutY() + brick.getyPosition() * brickPanel.getHgap() + brick.getyPosition() * BRICK_SIZE);
@@ -233,7 +241,14 @@ public class GuiController implements Initializable {
     public void bindScore(IntegerProperty integerProperty) {
         if (scoreLabel != null && integerProperty != null) {
             scoreLabel.textProperty().bind(integerProperty.asString());
+            integerProperty.addListener((obs, oldVal, newVal) -> {
+                if (newVal.intValue() > highScore) {
+                    highScore = newVal.intValue();
+                    if (highScoreLabel != null) highScoreLabel.setText(String.valueOf(highScore));
+                }
+            });
         }
+        if (highScoreLabel != null) highScoreLabel.setText(String.valueOf(highScore));
     }
 
     public void gameOver() {
@@ -283,17 +298,36 @@ public class GuiController implements Initializable {
         if (currentScoreLabel != null) {
             currentScoreLabel.setVisible(false);
         }
+        if (highScoreLabel != null) highScoreLabel.setVisible(false);
+        if (highScoreTextLabel != null) highScoreTextLabel.setVisible(false);
     }
     
     private void showGameElements() {
-        if (gameBoard != null) {
-            gameBoard.setVisible(true);
+        if (gameBoard != null) gameBoard.setVisible(true);
+        if (scoreLabel != null) scoreLabel.setVisible(true);
+        if (currentScoreLabel != null) currentScoreLabel.setVisible(true);
+        if (highScoreLabel != null) highScoreLabel.setVisible(true);
+        if (highScoreTextLabel != null) highScoreTextLabel.setVisible(true);
+    }
+    
+    private void clearGameDisplay() {
+        if (displayMatrix != null) {
+            for (int i = 2; i < displayMatrix.length; i++) {
+                for (int j = 0; j < displayMatrix[i].length; j++) {
+                    if (displayMatrix[i][j] != null) {
+                        setRectangleData(0, displayMatrix[i][j]);
+                    }
+                }
+            }
         }
-        if (scoreLabel != null) {
-            scoreLabel.setVisible(true);
-        }
-        if (currentScoreLabel != null) {
-            currentScoreLabel.setVisible(true);
+        if (rectangles != null) {
+            for (int i = 0; i < rectangles.length; i++) {
+                for (int j = 0; j < rectangles[i].length; j++) {
+                    if (rectangles[i][j] != null) {
+                        setRectangleData(0, rectangles[i][j]);
+                    }
+                }
+            }
         }
     }
 }
