@@ -99,6 +99,16 @@ public class SimpleBoard implements Board {
         return new ViewData(brickRotator.getCurrentShape(), (int) currentOffset.getX(), (int) currentOffset.getY(), brickGenerator.getNextBrick().getShapeMatrix().get(0));
     }
 
+    public ViewData getGhostPosition() {
+        int[][] shape = brickRotator.getCurrentShape();
+        int ghostY = (int) currentOffset.getY();
+        int[][] matrix = MatrixOperations.copy(currentGameMatrix);
+        while (!MatrixOperations.intersect(matrix, shape, (int) currentOffset.getX(), ghostY + 1)) {
+            ghostY++;
+        }
+        return new ViewData(shape, (int) currentOffset.getX(), ghostY, brickGenerator.getNextBrick().getShapeMatrix().get(0));
+    }
+
     @Override
     public void mergeBrickToBackground() {
         currentGameMatrix = MatrixOperations.merge(currentGameMatrix, brickRotator.getCurrentShape(), (int) currentOffset.getX(), (int) currentOffset.getY());

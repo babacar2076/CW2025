@@ -71,4 +71,11 @@ public class GameController implements InputEventListener {
     public void resetGame() {
         board.newGame();
     }
+    
+    public ViewData getGhostPosition() {
+        if (board instanceof SimpleBoard) {
+            return ((SimpleBoard) board).getGhostPosition();
+        }
+        return board.getViewData();
+    }
 }

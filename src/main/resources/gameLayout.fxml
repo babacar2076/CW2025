@@ -10,17 +10,14 @@
 <Pane fx:controller="com.comp2042.GuiController"
       xmlns:fx="http://javafx.com/fxml">
     <GridPane fx:id="brickPanel" vgap="1" hgap="1"/>
+    <GridPane fx:id="ghostPanel" vgap="1" hgap="1"/>
     <BorderPane styleClass="gameBoard" fx:id="gameBoard" layoutY="0">
         <center>
             <GridPane fx:id="gamePanel" hgap="1" vgap="1" layoutY="50" layoutX="40"/>
         </center>
     </BorderPane>
 
-    <Group fx:id="groupNotification" layoutX="30" layoutY="203">
-        <VBox alignment="CENTER">
-            <GameOverPanel fx:id="gameOverPanel"/>
-        </VBox>
-    </Group>
+    <GameOverPanel fx:id="gameOverPanel" prefWidth="450" prefHeight="620" visible="false"/>
     
     <MainMenuPanel fx:id="mainMenuPanel" prefWidth="450" prefHeight="620"/>
     
@@ -28,6 +25,14 @@
     <Label fx:id="scoreLabel" text="0" styleClass="scoreClass" layoutX="225" layoutY="32"/>
     <Label fx:id="highScoreTextLabel" text="High Score" styleClass="nextBrickLabel" layoutX="225" layoutY="80"/>
     <Label fx:id="highScoreLabel" text="0" styleClass="scoreClass" layoutX="225" layoutY="112"/>
+    <BorderPane fx:id="nextBrickContainer" styleClass="nextBrick" layoutX="300" layoutY="150" prefWidth="100" prefHeight="100">
+        <top>
+            <Label text="Next Block" styleClass="nextBrickLabel" alignment="CENTER"/>
+        </top>
+        <center>
+            <GridPane fx:id="nextBrickPanel" hgap="1" vgap="1" alignment="CENTER"/>
+        </center>
+    </BorderPane>
     <stylesheets>
         <URL value="@window_style.css"/>
     </stylesheets>

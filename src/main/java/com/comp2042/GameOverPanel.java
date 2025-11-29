@@ -13,6 +13,7 @@ public class GameOverPanel extends BorderPane {
     private Button replayButton;
 
     public GameOverPanel() {
+        getStyleClass().add("gameOverBackground");
         VBox vbox = new VBox(20);
         vbox.setAlignment(javafx.geometry.Pos.CENTER);
         final Label gameOverLabel = new Label("GAME OVER!");

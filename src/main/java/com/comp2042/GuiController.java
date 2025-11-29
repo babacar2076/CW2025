@@ -43,6 +43,18 @@ public class GuiController implements Initializable {
     private GridPane brickPanel;
 
     @FXML
+    private GridPane ghostPanel;
+
+    @FXML
+    private GridPane nextBrickPanel;
+
+    @FXML
+    private javafx.scene.layout.BorderPane nextBrickContainer;
+
+    private Rectangle[][] ghostRectangles;
+    private Rectangle[][] nextBrickRectangles;
+
+    @FXML
     private GameOverPanel gameOverPanel;
 
     @FXML
@@ -107,7 +119,7 @@ public class GuiController implements Initializable {
         });
         gameOverPanel.setVisible(false);
         gameOverPanel.setOnReturnToMenu(e -> { timeLine.stop(); gameOverPanel.setVisible(false); if (eventListener != null && eventListener instanceof GameController) { ((GameController) eventListener).resetGame(); } clearGameDisplay(); hideGameElements(); if (mainMenuPanel != null) mainMenuPanel.setVisible(true); isPause.setValue(false); isGameOver.setValue(false); });
-        gameOverPanel.setOnReplay(e -> { timeLine.stop(); gameOverPanel.setVisible(false); eventListener.createNewGame(); gamePanel.requestFocus(); timeLine.play(); isPause.setValue(false); isGameOver.setValue(false); });
+        gameOverPanel.setOnReplay(e -> { timeLine.stop(); gameOverPanel.setVisible(false); clearNextBlock(); if (currentScoreLabel != null) currentScoreLabel.setVisible(true); if (scoreLabel != null) scoreLabel.setVisible(true); if (highScoreTextLabel != null) highScoreTextLabel.setVisible(true); if (highScoreLabel != null) highScoreLabel.setVisible(true); if (nextBrickContainer != null) nextBrickContainer.setVisible(true); eventListener.createNewGame(); gamePanel.requestFocus(); timeLine.play(); isPause.setValue(false); isGameOver.setValue(false); });
         
         mainMenuPanel.setVisible(true);
         mainMenuPanel.setOnNewGame(e -> startNewGame());
@@ -144,7 +156,29 @@ public class GuiController implements Initializable {
         }
         brickPanel.setLayoutX(gamePanel.getLayoutX() + brick.getxPosition() * brickPanel.getVgap() + brick.getxPosition() * BRICK_SIZE);
         brickPanel.setLayoutY(-42 + gamePanel.getLayoutY() + brick.getyPosition() * brickPanel.getHgap() + brick.getyPosition() * BRICK_SIZE);
-
+        
+        ghostRectangles = new Rectangle[brick.getBrickData().length][brick.getBrickData()[0].length];
+        for (int i = 0; i < brick.getBrickData().length; i++) {
+            for (int j = 0; j < brick.getBrickData()[i].length; j++) {
+                Rectangle rectangle = new Rectangle(BRICK_SIZE, BRICK_SIZE);
+                rectangle.setFill(Color.TRANSPARENT);
+                ghostRectangles[i][j] = rectangle;
+                ghostPanel.add(rectangle, j, i);
+            }
+        }
+        
+        if (nextBrickPanel != null) {
+            nextBrickPanel.getChildren().clear();
+        }
+        nextBrickRectangles = new Rectangle[brick.getNextBrickData().length][brick.getNextBrickData()[0].length];
+        for (int i = 0; i < brick.getNextBrickData().length; i++) {
+            for (int j = 0; j < brick.getNextBrickData()[i].length; j++) {
+                Rectangle rectangle = new Rectangle(BRICK_SIZE, BRICK_SIZE);
+                setRectangleData(brick.getNextBrickData()[i][j], rectangle);
+                nextBrickRectangles[i][j] = rectangle;
+                nextBrickPanel.add(rectangle, j, i);
+            }
+        }
 
         timeLine = new Timeline(new KeyFrame(
                 Duration.millis(400),
@@ -196,6 +230,31 @@ public class GuiController implements Initializable {
             for (int i = 0; i < brick.getBrickData().length; i++) {
                 for (int j = 0; j < brick.getBrickData()[i].length; j++) {
                     setRectangleData(brick.getBrickData()[i][j], rectangles[i][j]);
+                }
+            }
+            if (eventListener instanceof GameController && ghostPanel != null) {
+                ViewData ghost = ((GameController) eventListener).getGhostPosition();
+                ghostPanel.setLayoutX(gamePanel.getLayoutX() + ghost.getxPosition() * ghostPanel.getVgap() + ghost.getxPosition() * BRICK_SIZE);
+                ghostPanel.setLayoutY(-42 + gamePanel.getLayoutY() + ghost.getyPosition() * ghostPanel.getHgap() + ghost.getyPosition() * BRICK_SIZE);
+                for (int i = 0; i < ghost.getBrickData().length; i++) {
+                    for (int j = 0; j < ghost.getBrickData()[i].length; j++) {
+                        int color = ghost.getBrickData()[i][j];
+                        if (color != 0) {
+                            Color c = (Color) getFillColor(color);
+                            ghostRectangles[i][j].setFill(new Color(c.getRed(), c.getGreen(), c.getBlue(), 0.3));
+                            ghostRectangles[i][j].setArcHeight(9);
+                            ghostRectangles[i][j].setArcWidth(9);
+                        } else {
+                            ghostRectangles[i][j].setFill(Color.TRANSPARENT);
+                        }
+                    }
+                }
+            }
+            if (nextBrickRectangles != null) {
+                for (int i = 0; i < brick.getNextBrickData().length; i++) {
+                    for (int j = 0; j < brick.getNextBrickData()[i].length; j++) {
+                        setRectangleData(brick.getNextBrickData()[i][j], nextBrickRectangles[i][j]);
+                    }
                 }
             }
         }
@@ -253,6 +312,11 @@ public class GuiController implements Initializable {
 
     public void gameOver() {
         timeLine.stop();
+        if (currentScoreLabel != null) currentScoreLabel.setVisible(false);
+        if (scoreLabel != null) scoreLabel.setVisible(false);
+        if (highScoreTextLabel != null) highScoreTextLabel.setVisible(false);
+        if (highScoreLabel != null) highScoreLabel.setVisible(false);
+        if (nextBrickContainer != null) nextBrickContainer.setVisible(false);
         gameOverPanel.setVisible(true);
         isGameOver.setValue(Boolean.TRUE);
     }
@@ -277,6 +341,11 @@ public class GuiController implements Initializable {
             mainMenuPanel.setVisible(false);
         }
         showGameElements();
+        if (currentScoreLabel != null) currentScoreLabel.setVisible(true);
+        if (scoreLabel != null) scoreLabel.setVisible(true);
+        if (highScoreTextLabel != null) highScoreTextLabel.setVisible(true);
+        if (highScoreLabel != null) highScoreLabel.setVisible(true);
+        if (nextBrickContainer != null) nextBrickContainer.setVisible(true);
         if (eventListener != null && eventListener instanceof GameController) {
             ((GameController) eventListener).startGame();
         }
@@ -300,6 +369,7 @@ public class GuiController implements Initializable {
         }
         if (highScoreLabel != null) highScoreLabel.setVisible(false);
         if (highScoreTextLabel != null) highScoreTextLabel.setVisible(false);
+        if (nextBrickContainer != null) nextBrickContainer.setVisible(false);
     }
     
     private void showGameElements() {
@@ -308,6 +378,7 @@ public class GuiController implements Initializable {
         if (currentScoreLabel != null) currentScoreLabel.setVisible(true);
         if (highScoreLabel != null) highScoreLabel.setVisible(true);
         if (highScoreTextLabel != null) highScoreTextLabel.setVisible(true);
+        if (nextBrickContainer != null) nextBrickContainer.setVisible(true);
     }
     
     private void clearGameDisplay() {
@@ -329,5 +400,21 @@ public class GuiController implements Initializable {
                 }
             }
         }
+        if (nextBrickRectangles != null) {
+            for (int i = 0; i < nextBrickRectangles.length; i++) {
+                for (int j = 0; j < nextBrickRectangles[i].length; j++) {
+                    if (nextBrickRectangles[i][j] != null) {
+                        setRectangleData(0, nextBrickRectangles[i][j]);
+                    }
+                }
+            }
+        }
+    }
+    
+    private void clearNextBlock() {
+        if (nextBrickPanel != null) {
+            nextBrickPanel.getChildren().clear();
+        }
+        nextBrickRectangles = null;
     }
 }
