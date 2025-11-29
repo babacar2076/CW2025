@@ -157,6 +157,9 @@ public class GuiController implements Initializable {
         brickPanel.setLayoutX(gamePanel.getLayoutX() + brick.getxPosition() * brickPanel.getVgap() + brick.getxPosition() * BRICK_SIZE);
         brickPanel.setLayoutY(-42 + gamePanel.getLayoutY() + brick.getyPosition() * brickPanel.getHgap() + brick.getyPosition() * BRICK_SIZE);
         
+        if (ghostPanel != null) {
+            ghostPanel.getChildren().clear();
+        }
         ghostRectangles = new Rectangle[brick.getBrickData().length][brick.getBrickData()[0].length];
         for (int i = 0; i < brick.getBrickData().length; i++) {
             for (int j = 0; j < brick.getBrickData()[i].length; j++) {
@@ -234,6 +237,18 @@ public class GuiController implements Initializable {
             }
             if (eventListener instanceof GameController && ghostPanel != null) {
                 ViewData ghost = ((GameController) eventListener).getGhostPosition();
+                if (ghostRectangles == null || ghostRectangles.length != ghost.getBrickData().length || (ghostRectangles.length > 0 && ghostRectangles[0].length != ghost.getBrickData()[0].length)) {
+                    ghostPanel.getChildren().clear();
+                    ghostRectangles = new Rectangle[ghost.getBrickData().length][ghost.getBrickData()[0].length];
+                    for (int i = 0; i < ghost.getBrickData().length; i++) {
+                        for (int j = 0; j < ghost.getBrickData()[i].length; j++) {
+                            Rectangle rectangle = new Rectangle(BRICK_SIZE, BRICK_SIZE);
+                            rectangle.setFill(Color.TRANSPARENT);
+                            ghostRectangles[i][j] = rectangle;
+                            ghostPanel.add(rectangle, j, i);
+                        }
+                    }
+                }
                 ghostPanel.setLayoutX(gamePanel.getLayoutX() + ghost.getxPosition() * ghostPanel.getVgap() + ghost.getxPosition() * BRICK_SIZE);
                 ghostPanel.setLayoutY(-42 + gamePanel.getLayoutY() + ghost.getyPosition() * ghostPanel.getHgap() + ghost.getyPosition() * BRICK_SIZE);
                 for (int i = 0; i < ghost.getBrickData().length; i++) {
@@ -250,7 +265,20 @@ public class GuiController implements Initializable {
                     }
                 }
             }
-            if (nextBrickRectangles != null) {
+            if (nextBrickRectangles == null || nextBrickRectangles.length != brick.getNextBrickData().length || (nextBrickRectangles.length > 0 && nextBrickRectangles[0].length != brick.getNextBrickData()[0].length)) {
+                if (nextBrickPanel != null) {
+                    nextBrickPanel.getChildren().clear();
+                }
+                nextBrickRectangles = new Rectangle[brick.getNextBrickData().length][brick.getNextBrickData()[0].length];
+                for (int i = 0; i < brick.getNextBrickData().length; i++) {
+                    for (int j = 0; j < brick.getNextBrickData()[i].length; j++) {
+                        Rectangle rectangle = new Rectangle(BRICK_SIZE, BRICK_SIZE);
+                        setRectangleData(brick.getNextBrickData()[i][j], rectangle);
+                        nextBrickRectangles[i][j] = rectangle;
+                        nextBrickPanel.add(rectangle, j, i);
+                    }
+                }
+            } else {
                 for (int i = 0; i < brick.getNextBrickData().length; i++) {
                     for (int j = 0; j < brick.getNextBrickData()[i].length; j++) {
                         setRectangleData(brick.getNextBrickData()[i][j], nextBrickRectangles[i][j]);
