@@ -78,4 +78,8 @@ public class GameController implements InputEventListener {
         }
         return board.getViewData();
     }
+    
+    public Score getScore() {
+        return board.getScore();
+    }
 }

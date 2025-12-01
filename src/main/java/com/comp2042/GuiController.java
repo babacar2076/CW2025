@@ -21,10 +21,14 @@ import javafx.scene.control.Label;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.util.Duration;
-import javafx.scene.effect.DropShadow;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
+import java.util.Scanner;
 
 public class GuiController implements Initializable {
 
@@ -58,6 +62,9 @@ public class GuiController implements Initializable {
     private GameOverPanel gameOverPanel;
 
     @FXML
+    private PausePanel pausePanel;
+
+    @FXML
     private MainMenuPanel mainMenuPanel;
 
     @FXML
@@ -73,6 +80,7 @@ public class GuiController implements Initializable {
     private Label highScoreTextLabel;
 
     private int highScore = 0;
+    private static final String HIGH_SCORE_FILE = "highscore.txt";
 
     private Rectangle[][] displayMatrix;
 
@@ -111,6 +119,14 @@ public class GuiController implements Initializable {
                         moveDown(new MoveEvent(EventType.DOWN, EventSource.USER));
                         keyEvent.consume();
                     }
+                    if (keyEvent.getCode() == KeyCode.SPACE) {
+                        hardDrop();
+                        keyEvent.consume();
+                    }
+                }
+                if (keyEvent.getCode() == KeyCode.P) {
+                    togglePause();
+                    keyEvent.consume();
                 }
                 if (keyEvent.getCode() == KeyCode.N) {
                     newGame(null);
@@ -121,12 +137,19 @@ public class GuiController implements Initializable {
         gameOverPanel.setOnReturnToMenu(e -> { timeLine.stop(); gameOverPanel.setVisible(false); if (eventListener != null && eventListener instanceof GameController) { ((GameController) eventListener).resetGame(); } clearGameDisplay(); hideGameElements(); if (mainMenuPanel != null) mainMenuPanel.setVisible(true); isPause.setValue(false); isGameOver.setValue(false); });
         gameOverPanel.setOnReplay(e -> { timeLine.stop(); gameOverPanel.setVisible(false); clearNextBlock(); if (currentScoreLabel != null) currentScoreLabel.setVisible(true); if (scoreLabel != null) scoreLabel.setVisible(true); if (highScoreTextLabel != null) highScoreTextLabel.setVisible(true); if (highScoreLabel != null) highScoreLabel.setVisible(true); if (nextBrickContainer != null) nextBrickContainer.setVisible(true); eventListener.createNewGame(); gamePanel.requestFocus(); timeLine.play(); isPause.setValue(false); isGameOver.setValue(false); });
         
+        pausePanel.setVisible(false);
+        pausePanel.setOnResume(e -> { pausePanel.setVisible(false); timeLine.play(); isPause.setValue(false); gamePanel.requestFocus(); });
+        pausePanel.setOnRestart(e -> { pausePanel.setVisible(false); if (eventListener != null && eventListener instanceof GameController) { ((GameController) eventListener).resetGame(); ((GameController) eventListener).getScore().reset(); } clearGameDisplay(); clearNextBlock(); if (eventListener != null) eventListener.createNewGame(); gamePanel.requestFocus(); timeLine.play(); isPause.setValue(false); isGameOver.setValue(false); });
+        pausePanel.setOnReturnToMenu(e -> { timeLine.stop(); pausePanel.setVisible(false); if (eventListener != null && eventListener instanceof GameController) { ((GameController) eventListener).resetGame(); } clearGameDisplay(); hideGameElements(); if (mainMenuPanel != null) mainMenuPanel.setVisible(true); isPause.setValue(false); isGameOver.setValue(false); });
+        
         mainMenuPanel.setVisible(true);
         mainMenuPanel.setOnNewGame(e -> startNewGame());
         mainMenuPanel.setOnLevels(e -> {});
         mainMenuPanel.getControlsButton().setOnAction(e -> mainMenuPanel.toggleControls());
         
         hideGameElements();
+        
+        loadHighScore();
 
         final Reflection reflection = new Reflection();
         reflection.setFraction(0.8);
@@ -320,6 +343,49 @@ public class GuiController implements Initializable {
         }
         gamePanel.requestFocus();
     }
+    
+    private void hardDrop() {
+        if (isPause.getValue() == Boolean.FALSE && isGameOver.getValue() == Boolean.FALSE && eventListener != null) {
+            DownData downData = null;
+            ViewData previousViewData = null;
+            boolean blockPlaced = false;
+            
+            while (!blockPlaced) {
+                downData = eventListener.onDownEvent(new MoveEvent(EventType.DOWN, EventSource.USER));
+                ViewData currentViewData = downData.getViewData();
+                
+                if (currentViewData == null) {
+                    blockPlaced = true;
+                    break;
+                }
+                
+                if (previousViewData != null) {
+                    if (currentViewData.getyPosition() == previousViewData.getyPosition()) {
+                        blockPlaced = true;
+                        break;
+                    }
+                }
+                
+                if (downData.getClearRow() != null) {
+                    blockPlaced = true;
+                    if (downData.getClearRow().getLinesRemoved() > 0) {
+                        NotificationPanel notificationPanel = new NotificationPanel("+" + downData.getClearRow().getScoreBonus());
+                        groupNotification.getChildren().add(notificationPanel);
+                        notificationPanel.showScore(groupNotification.getChildren());
+                    }
+                    break;
+                }
+                
+                previousViewData = currentViewData;
+                refreshBrick(currentViewData);
+            }
+            
+            if (downData != null && downData.getViewData() != null) {
+                refreshBrick(downData.getViewData());
+            }
+        }
+        gamePanel.requestFocus();
+    }
 
     public void setEventListener(InputEventListener eventListener) {
         this.eventListener = eventListener;
@@ -332,6 +398,7 @@ public class GuiController implements Initializable {
                 if (newVal.intValue() > highScore) {
                     highScore = newVal.intValue();
                     if (highScoreLabel != null) highScoreLabel.setText(String.valueOf(highScore));
+                    saveHighScore();
                 }
             });
         }
@@ -362,6 +429,31 @@ public class GuiController implements Initializable {
 
     public void pauseGame(ActionEvent actionEvent) {
         gamePanel.requestFocus();
+    }
+    
+    private void togglePause() {
+        if (isGameOver.getValue() == Boolean.FALSE) {
+            if (isPause.getValue() == Boolean.FALSE) {
+                timeLine.stop();
+                if (currentScoreLabel != null) currentScoreLabel.setVisible(false);
+                if (scoreLabel != null) scoreLabel.setVisible(false);
+                if (highScoreTextLabel != null) highScoreTextLabel.setVisible(false);
+                if (highScoreLabel != null) highScoreLabel.setVisible(false);
+                if (nextBrickContainer != null) nextBrickContainer.setVisible(false);
+                pausePanel.setVisible(true);
+                isPause.setValue(true);
+            } else {
+                pausePanel.setVisible(false);
+                if (currentScoreLabel != null) currentScoreLabel.setVisible(true);
+                if (scoreLabel != null) scoreLabel.setVisible(true);
+                if (highScoreTextLabel != null) highScoreTextLabel.setVisible(true);
+                if (highScoreLabel != null) highScoreLabel.setVisible(true);
+                if (nextBrickContainer != null) nextBrickContainer.setVisible(true);
+                timeLine.play();
+                isPause.setValue(false);
+                gamePanel.requestFocus();
+            }
+        }
     }
     
     private void startNewGame() {
@@ -444,5 +536,33 @@ public class GuiController implements Initializable {
             nextBrickPanel.getChildren().clear();
         }
         nextBrickRectangles = null;
+    }
+    
+    private void loadHighScore() {
+        try {
+            File file = new File(HIGH_SCORE_FILE);
+            if (file.exists()) {
+                Scanner scanner = new Scanner(file);
+                if (scanner.hasNextInt()) {
+                    highScore = scanner.nextInt();
+                    if (highScoreLabel != null) {
+                        highScoreLabel.setText(String.valueOf(highScore));
+                    }
+                }
+                scanner.close();
+            }
+        } catch (FileNotFoundException e) {
+            // File doesn't exist yet, use default highScore = 0
+        }
+    }
+    
+    private void saveHighScore() {
+        try {
+            FileWriter writer = new FileWriter(HIGH_SCORE_FILE);
+            writer.write(String.valueOf(highScore));
+            writer.close();
+        } catch (IOException e) {
+            // Failed to save, ignore
+        }
     }
 }

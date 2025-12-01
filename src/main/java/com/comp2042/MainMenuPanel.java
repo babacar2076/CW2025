@@ -53,10 +53,16 @@ public class MainMenuPanel extends BorderPane {
         Label down = new Label("↓ or S : Move Down");
         down.getStyleClass().add("controlsText");
         
+        Label space = new Label("SPACE : Hard Drop");
+        space.getStyleClass().add("controlsText");
+        
+        Label pause = new Label("P : Pause");
+        pause.getStyleClass().add("controlsText");
+        
         Label newGameKey = new Label("N : New Game");
         newGameKey.getStyleClass().add("controlsText");
         
-        controlsInfo.getChildren().addAll(controlsTitle, leftRight, rotate, down, newGameKey);
+        controlsInfo.getChildren().addAll(controlsTitle, leftRight, rotate, down, space, pause, newGameKey);
     }
 
     public void setOnNewGame(javafx.event.EventHandler<ActionEvent> handler) {
