@@ -54,9 +54,16 @@ public class GuiController implements Initializable {
 
     @FXML
     private javafx.scene.layout.BorderPane nextBrickContainer;
+    
+    @FXML
+    private GridPane holdBrickPanel;
+    
+    @FXML
+    private javafx.scene.layout.BorderPane holdBrickContainer;
 
     private Rectangle[][] ghostRectangles;
     private Rectangle[][] nextBrickRectangles;
+    private Rectangle[][] holdBrickRectangles;
 
     @FXML
     private GameOverPanel gameOverPanel;
@@ -66,6 +73,9 @@ public class GuiController implements Initializable {
 
     @FXML
     private MainMenuPanel mainMenuPanel;
+    
+    @FXML
+    private LevelsPanel levelsPanel;
 
     @FXML
     private Label scoreLabel;
@@ -81,6 +91,12 @@ public class GuiController implements Initializable {
 
     private int highScore = 0;
     private static final String HIGH_SCORE_FILE = "highscore.txt";
+    private static final String LEVELS_FILE = "levels.txt";
+    private int currentLevel = 1;
+    private boolean[] unlockedLevels = new boolean[6];
+    private int[] levelScores = new int[6];
+    private static final int[] LEVEL_SPEEDS = {600, 500, 400, 300, 200, 0};
+    private int currentScore = 0;
 
     private Rectangle[][] displayMatrix;
 
@@ -123,6 +139,10 @@ public class GuiController implements Initializable {
                         hardDrop();
                         keyEvent.consume();
                     }
+                    if (keyEvent.getCode() == KeyCode.H) {
+                        holdBrick();
+                        keyEvent.consume();
+                    }
                 }
                 if (keyEvent.getCode() == KeyCode.P) {
                     togglePause();
@@ -139,17 +159,29 @@ public class GuiController implements Initializable {
         
         pausePanel.setVisible(false);
         pausePanel.setOnResume(e -> { pausePanel.setVisible(false); timeLine.play(); isPause.setValue(false); gamePanel.requestFocus(); });
-        pausePanel.setOnRestart(e -> { pausePanel.setVisible(false); if (eventListener != null && eventListener instanceof GameController) { ((GameController) eventListener).resetGame(); ((GameController) eventListener).getScore().reset(); } clearGameDisplay(); clearNextBlock(); if (eventListener != null) eventListener.createNewGame(); gamePanel.requestFocus(); timeLine.play(); isPause.setValue(false); isGameOver.setValue(false); });
+        pausePanel.setOnRestart(e -> { pausePanel.setVisible(false); if (eventListener != null && eventListener instanceof GameController) { ((GameController) eventListener).resetGame(); ((GameController) eventListener).getScore().reset(); } clearGameDisplay(); clearNextBlock(); clearHoldBlock(); if (eventListener != null) eventListener.createNewGame(); refreshHoldBrick(); gamePanel.requestFocus(); timeLine.play(); isPause.setValue(false); isGameOver.setValue(false); });
         pausePanel.setOnReturnToMenu(e -> { timeLine.stop(); pausePanel.setVisible(false); if (eventListener != null && eventListener instanceof GameController) { ((GameController) eventListener).resetGame(); } clearGameDisplay(); hideGameElements(); if (mainMenuPanel != null) mainMenuPanel.setVisible(true); isPause.setValue(false); isGameOver.setValue(false); });
         
         mainMenuPanel.setVisible(true);
-        mainMenuPanel.setOnNewGame(e -> startNewGame());
-        mainMenuPanel.setOnLevels(e -> {});
+        mainMenuPanel.setOnNewGame(e -> { currentLevel = 1; startNewGame(); });
+        mainMenuPanel.setOnLevels(e -> { mainMenuPanel.setVisible(false); levelsPanel.setVisible(true); updateLevelsPanel(); });
+        
+        levelsPanel.setVisible(false);
+        for (int i = 1; i <= 6; i++) {
+            final int level = i;
+            levelsPanel.setOnLevelSelected(level, e -> { currentLevel = level; levelsPanel.setVisible(false); startNewGame(); });
+        }
+        levelsPanel.setOnBack(e -> { levelsPanel.setVisible(false); mainMenuPanel.setVisible(true); });
         mainMenuPanel.getControlsButton().setOnAction(e -> mainMenuPanel.toggleControls());
         
         hideGameElements();
         
         loadHighScore();
+        loadLevels();
+        if (!unlockedLevels[0]) {
+            unlockedLevels[0] = true;
+            saveLevels();
+        }
 
         final Reflection reflection = new Reflection();
         reflection.setFraction(0.8);
@@ -206,12 +238,20 @@ public class GuiController implements Initializable {
             }
         }
 
+        int speed;
+        if (currentLevel == 6) {
+            speed = currentScore * 10;
+            if (speed < 100) speed = 100;
+        } else {
+            speed = LEVEL_SPEEDS[currentLevel - 1];
+        }
         timeLine = new Timeline(new KeyFrame(
-                Duration.millis(400),
+                Duration.millis(speed),
                 ae -> moveDown(new MoveEvent(EventType.DOWN, EventSource.THREAD))
         ));
         timeLine.setCycleCount(Timeline.INDEFINITE);
         timeLine.play();
+        refreshHoldBrick();
     }
 
     private Paint getFillColor(int i) {
@@ -395,10 +435,30 @@ public class GuiController implements Initializable {
         if (scoreLabel != null && integerProperty != null) {
             scoreLabel.textProperty().bind(integerProperty.asString());
             integerProperty.addListener((obs, oldVal, newVal) -> {
-                if (newVal.intValue() > highScore) {
-                    highScore = newVal.intValue();
+                int score = newVal.intValue();
+                currentScore = score;
+                if (score > highScore) {
+                    highScore = score;
                     if (highScoreLabel != null) highScoreLabel.setText(String.valueOf(highScore));
                     saveHighScore();
+                }
+                if (score >= 200 && currentLevel < 6) {
+                    int nextLevelIndex = currentLevel;
+                    if (!unlockedLevels[nextLevelIndex]) {
+                        unlockedLevels[nextLevelIndex] = true;
+                        levelScores[currentLevel - 1] = score;
+                        saveLevels();
+                    }
+                }
+                if (currentLevel == 6 && timeLine != null) {
+                    int newSpeed = Math.max(100, score * 10);
+                    timeLine.stop();
+                    timeLine = new Timeline(new KeyFrame(
+                            Duration.millis(newSpeed),
+                            ae -> moveDown(new MoveEvent(EventType.DOWN, EventSource.THREAD))
+                    ));
+                    timeLine.setCycleCount(Timeline.INDEFINITE);
+                    timeLine.play();
                 }
             });
         }
@@ -412,6 +472,7 @@ public class GuiController implements Initializable {
         if (highScoreTextLabel != null) highScoreTextLabel.setVisible(false);
         if (highScoreLabel != null) highScoreLabel.setVisible(false);
         if (nextBrickContainer != null) nextBrickContainer.setVisible(false);
+        if (holdBrickContainer != null) holdBrickContainer.setVisible(false);
         gameOverPanel.setVisible(true);
         isGameOver.setValue(Boolean.TRUE);
     }
@@ -440,6 +501,7 @@ public class GuiController implements Initializable {
                 if (highScoreTextLabel != null) highScoreTextLabel.setVisible(false);
                 if (highScoreLabel != null) highScoreLabel.setVisible(false);
                 if (nextBrickContainer != null) nextBrickContainer.setVisible(false);
+                if (holdBrickContainer != null) holdBrickContainer.setVisible(false);
                 pausePanel.setVisible(true);
                 isPause.setValue(true);
             } else {
@@ -456,18 +518,59 @@ public class GuiController implements Initializable {
         }
     }
     
+    private void holdBrick() {
+        if (eventListener != null && eventListener instanceof GameController) {
+            ViewData newViewData = ((GameController) eventListener).holdBrick();
+            refreshBrick(newViewData);
+            refreshHoldBrick();
+        }
+    }
+    
+    private void refreshHoldBrick() {
+        if (holdBrickPanel == null || eventListener == null || !(eventListener instanceof GameController)) {
+            return;
+        }
+        
+        com.comp2042.logic.bricks.Brick heldBrick = ((GameController) eventListener).getHeldBrick();
+        if (heldBrick == null) {
+            if (holdBrickPanel != null) {
+                holdBrickPanel.getChildren().clear();
+            }
+            holdBrickRectangles = null;
+            return;
+        }
+        
+        if (holdBrickPanel != null) {
+            holdBrickPanel.getChildren().clear();
+        }
+        
+        int[][] holdShape = heldBrick.getShapeMatrix().get(0);
+        holdBrickRectangles = new Rectangle[holdShape.length][holdShape[0].length];
+        for (int i = 0; i < holdShape.length; i++) {
+            for (int j = 0; j < holdShape[i].length; j++) {
+                Rectangle rectangle = new Rectangle(BRICK_SIZE, BRICK_SIZE);
+                setRectangleData(holdShape[i][j], rectangle);
+                holdBrickRectangles[i][j] = rectangle;
+                holdBrickPanel.add(rectangle, j, i);
+            }
+        }
+    }
+    
     private void startNewGame() {
         if (mainMenuPanel != null) {
             mainMenuPanel.setVisible(false);
         }
+        currentScore = 0;
         showGameElements();
         if (currentScoreLabel != null) currentScoreLabel.setVisible(true);
         if (scoreLabel != null) scoreLabel.setVisible(true);
         if (highScoreTextLabel != null) highScoreTextLabel.setVisible(true);
         if (highScoreLabel != null) highScoreLabel.setVisible(true);
         if (nextBrickContainer != null) nextBrickContainer.setVisible(true);
+        if (holdBrickContainer != null) holdBrickContainer.setVisible(true);
         if (eventListener != null && eventListener instanceof GameController) {
             ((GameController) eventListener).startGame();
+            refreshHoldBrick();
         }
         gamePanel.requestFocus();
         if (timeLine != null) {
@@ -490,6 +593,7 @@ public class GuiController implements Initializable {
         if (highScoreLabel != null) highScoreLabel.setVisible(false);
         if (highScoreTextLabel != null) highScoreTextLabel.setVisible(false);
         if (nextBrickContainer != null) nextBrickContainer.setVisible(false);
+        if (holdBrickContainer != null) holdBrickContainer.setVisible(false);
     }
     
     private void showGameElements() {
@@ -499,6 +603,7 @@ public class GuiController implements Initializable {
         if (highScoreLabel != null) highScoreLabel.setVisible(true);
         if (highScoreTextLabel != null) highScoreTextLabel.setVisible(true);
         if (nextBrickContainer != null) nextBrickContainer.setVisible(true);
+        if (holdBrickContainer != null) holdBrickContainer.setVisible(true);
     }
     
     private void clearGameDisplay() {
@@ -538,6 +643,13 @@ public class GuiController implements Initializable {
         nextBrickRectangles = null;
     }
     
+    private void clearHoldBlock() {
+        if (holdBrickPanel != null) {
+            holdBrickPanel.getChildren().clear();
+        }
+        holdBrickRectangles = null;
+    }
+    
     private void loadHighScore() {
         try {
             File file = new File(HIGH_SCORE_FILE);
@@ -563,6 +675,46 @@ public class GuiController implements Initializable {
             writer.close();
         } catch (IOException e) {
             // Failed to save, ignore
+        }
+    }
+    
+    private void loadLevels() {
+        try {
+            File file = new File(LEVELS_FILE);
+            if (file.exists()) {
+                Scanner scanner = new Scanner(file);
+                for (int i = 0; i < 6 && scanner.hasNextBoolean(); i++) {
+                    unlockedLevels[i] = scanner.nextBoolean();
+                }
+                for (int i = 0; i < 6 && scanner.hasNextInt(); i++) {
+                    levelScores[i] = scanner.nextInt();
+                }
+                scanner.close();
+            }
+        } catch (FileNotFoundException e) {
+            // File doesn't exist yet, use defaults
+        }
+    }
+    
+    private void saveLevels() {
+        try {
+            FileWriter writer = new FileWriter(LEVELS_FILE);
+            for (int i = 0; i < 6; i++) {
+                writer.write(String.valueOf(unlockedLevels[i]) + " ");
+            }
+            writer.write("\n");
+            for (int i = 0; i < 6; i++) {
+                writer.write(String.valueOf(levelScores[i]) + " ");
+            }
+            writer.close();
+        } catch (IOException e) {
+            // Failed to save, ignore
+        }
+    }
+    
+    private void updateLevelsPanel() {
+        for (int i = 1; i <= 6; i++) {
+            levelsPanel.setLevelEnabled(i, unlockedLevels[i - 1]);
         }
     }
 }

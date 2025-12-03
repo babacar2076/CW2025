@@ -82,4 +82,15 @@ public class GameController implements InputEventListener {
     public Score getScore() {
         return board.getScore();
     }
+    
+    public ViewData holdBrick() {
+        return board.holdBrick();
+    }
+    
+    public com.comp2042.logic.bricks.Brick getHeldBrick() {
+        if (board instanceof SimpleBoard) {
+            return ((SimpleBoard) board).getHeldBrick();
+        }
+        return null;
+    }
 }

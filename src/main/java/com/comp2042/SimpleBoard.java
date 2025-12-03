@@ -15,6 +15,8 @@ public class SimpleBoard implements Board {
     private int[][] currentGameMatrix;
     private Point currentOffset;
     private final Score score;
+    private Brick heldBrick;
+    private boolean canHold = true;
 
     public SimpleBoard(int width, int height) {
         this.width = width;
@@ -132,6 +134,39 @@ public class SimpleBoard implements Board {
     public void newGame() {
         currentGameMatrix = new int[width][height];
         score.reset();
+        heldBrick = null;
+        canHold = true;
         createNewBrick();
+    }
+    
+    @Override
+    public ViewData holdBrick() {
+        if (!canHold) {
+            return getViewData();
+        }
+        
+        Brick currentBrick = brickRotator.getBrick();
+        if (heldBrick == null) {
+            heldBrick = currentBrick;
+            canHold = false;
+            Brick newBrick = brickGenerator.getBrick();
+            brickRotator.setBrick(newBrick);
+            currentOffset = new Point(4, 0);
+        } else {
+            Brick temp = heldBrick;
+            heldBrick = currentBrick;
+            brickRotator.setBrick(temp);
+            currentOffset = new Point(4, 0);
+            canHold = false;
+        }
+        return getViewData();
+    }
+    
+    public Brick getHeldBrick() {
+        return heldBrick;
+    }
+    
+    public void setCanHold(boolean canHold) {
+        this.canHold = canHold;
     }
 }
