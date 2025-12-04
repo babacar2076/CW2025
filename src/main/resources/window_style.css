@@ -108,7 +108,7 @@
     -fx-font-size: 60px;
     -fx-font-weight: bold;
     -fx-text-fill: #00ff00;
-    -fx-effect: dropshadow(gaussian, #00ff00, 7, 0.9, 0, 0);
+    -fx-effect: dropshadow(gaussian, #00ff00, 4, 0.9, 0, 0);
 }
 
 .menuButton {
@@ -150,9 +150,9 @@
 }
 
 .mainMenuPanel {
-    -fx-background-image: url("background_image.png");
+    -fx-background-image: url("background2.png");
     -fx-background-size: cover;
-    -fx-background-position: center;
+    -fx-background-position: 0% center;
 }
 
 .gameOverBackground {

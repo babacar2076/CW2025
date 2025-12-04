@@ -155,7 +155,7 @@ public class GuiController implements Initializable {
         });
         gameOverPanel.setVisible(false);
         gameOverPanel.setOnReturnToMenu(e -> { timeLine.stop(); gameOverPanel.setVisible(false); if (eventListener != null && eventListener instanceof GameController) { ((GameController) eventListener).resetGame(); } clearGameDisplay(); hideGameElements(); if (mainMenuPanel != null) mainMenuPanel.setVisible(true); isPause.setValue(false); isGameOver.setValue(false); });
-        gameOverPanel.setOnReplay(e -> { timeLine.stop(); gameOverPanel.setVisible(false); clearNextBlock(); if (currentScoreLabel != null) currentScoreLabel.setVisible(true); if (scoreLabel != null) scoreLabel.setVisible(true); if (highScoreTextLabel != null) highScoreTextLabel.setVisible(true); if (highScoreLabel != null) highScoreLabel.setVisible(true); if (nextBrickContainer != null) nextBrickContainer.setVisible(true); eventListener.createNewGame(); gamePanel.requestFocus(); timeLine.play(); isPause.setValue(false); isGameOver.setValue(false); });
+        gameOverPanel.setOnReplay(e -> { timeLine.stop(); gameOverPanel.setVisible(false); clearNextBlock(); clearHoldBlock(); if (currentScoreLabel != null) currentScoreLabel.setVisible(true); if (scoreLabel != null) scoreLabel.setVisible(true); if (highScoreTextLabel != null) highScoreTextLabel.setVisible(true); if (highScoreLabel != null) highScoreLabel.setVisible(true); if (nextBrickContainer != null) nextBrickContainer.setVisible(true); if (holdBrickContainer != null) holdBrickContainer.setVisible(true); eventListener.createNewGame(); refreshHoldBrick(); gamePanel.requestFocus(); timeLine.play(); isPause.setValue(false); isGameOver.setValue(false); });
         
         pausePanel.setVisible(false);
         pausePanel.setOnResume(e -> { pausePanel.setVisible(false); timeLine.play(); isPause.setValue(false); gamePanel.requestFocus(); });
@@ -526,7 +526,7 @@ public class GuiController implements Initializable {
         }
     }
     
-    private void refreshHoldBrick() {
+    public void refreshHoldBrick() {
         if (holdBrickPanel == null || eventListener == null || !(eventListener instanceof GameController)) {
             return;
         }

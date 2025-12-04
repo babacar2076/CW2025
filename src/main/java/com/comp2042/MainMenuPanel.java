@@ -4,6 +4,7 @@ import javafx.event.ActionEvent;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
 public class MainMenuPanel extends BorderPane {
@@ -18,6 +19,7 @@ public class MainMenuPanel extends BorderPane {
         getStyleClass().add("mainMenuPanel");
         VBox vbox = new VBox(20);
         vbox.setAlignment(javafx.geometry.Pos.CENTER);
+        vbox.setPadding(new javafx.geometry.Insets(110, 0, 0, 0));
         
         Label titleLabel = new Label("TETRIS");
         titleLabel.getStyleClass().add("menuTitle");
@@ -44,6 +46,10 @@ public class MainMenuPanel extends BorderPane {
         Label controlsTitle = new Label("CONTROLS");
         controlsTitle.getStyleClass().add("controlsTitle");
         
+        // Left column controls
+        VBox leftControls = new VBox(10);
+        leftControls.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        
         Label leftRight = new Label("← → or A D : Move Left/Right");
         leftRight.getStyleClass().add("controlsText");
         
@@ -56,6 +62,12 @@ public class MainMenuPanel extends BorderPane {
         Label space = new Label("SPACE : Hard Drop");
         space.getStyleClass().add("controlsText");
         
+        leftControls.getChildren().addAll(leftRight, rotate, down, space);
+        
+        // Right column controls
+        VBox rightControls = new VBox(10);
+        rightControls.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        
         Label pause = new Label("P : Pause");
         pause.getStyleClass().add("controlsText");
         
@@ -65,7 +77,14 @@ public class MainMenuPanel extends BorderPane {
         Label newGameKey = new Label("N : New Game");
         newGameKey.getStyleClass().add("controlsText");
         
-        controlsInfo.getChildren().addAll(controlsTitle, leftRight, rotate, down, space, pause, hold, newGameKey);
+        rightControls.getChildren().addAll(pause, hold, newGameKey);
+        
+        // Arrange left and right columns horizontally
+        HBox controlsColumns = new HBox(40);
+        controlsColumns.setAlignment(javafx.geometry.Pos.CENTER);
+        controlsColumns.getChildren().addAll(leftControls, rightControls);
+        
+        controlsInfo.getChildren().addAll(controlsTitle, controlsColumns);
     }
 
     public void setOnNewGame(javafx.event.EventHandler<ActionEvent> handler) {

@@ -141,23 +141,23 @@ public class SimpleBoard implements Board {
     
     @Override
     public ViewData holdBrick() {
-        if (!canHold) {
-            return getViewData();
-        }
-        
         Brick currentBrick = brickRotator.getBrick();
         if (heldBrick == null) {
+            if (!canHold) {
+                return getViewData();
+            }
             heldBrick = currentBrick;
             canHold = false;
             Brick newBrick = brickGenerator.getBrick();
             brickRotator.setBrick(newBrick);
             currentOffset = new Point(4, 0);
         } else {
+            // Allow swapping even if canHold is false
+            // Preserve current position when swapping
             Brick temp = heldBrick;
             heldBrick = currentBrick;
             brickRotator.setBrick(temp);
-            currentOffset = new Point(4, 0);
-            canHold = false;
+            // Keep currentOffset at its current position instead of resetting to top
         }
         return getViewData();
     }

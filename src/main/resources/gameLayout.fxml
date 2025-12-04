@@ -41,7 +41,7 @@
             <GridPane fx:id="nextBrickPanel" hgap="1" vgap="1" alignment="CENTER"/>
         </center>
     </BorderPane>
-    <BorderPane fx:id="holdBrickContainer" styleClass="nextBrick" layoutX="300" layoutY="260" prefWidth="100" prefHeight="100">
+    <BorderPane fx:id="holdBrickContainer" styleClass="nextBrick" layoutX="300" layoutY="270" prefWidth="100" prefHeight="100">
         <top>
             <Label text="Hold" styleClass="nextBrickLabel" alignment="CENTER"/>
         </top>
