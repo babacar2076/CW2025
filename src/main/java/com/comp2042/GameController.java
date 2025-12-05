@@ -7,8 +7,12 @@ public class GameController implements InputEventListener {
 
     public GameController(GuiController c) {
         viewGuiController = c;
-        board.createNewBrick();
         viewGuiController.setEventListener(this);
+        // Don't start game immediately - wait for New Game button
+    }
+    
+    public void startGame() {
+        board.createNewBrick();
         viewGuiController.initGameView(board.getBoardMatrix(), board.getViewData());
         viewGuiController.bindScore(board.getScore().scoreProperty());
     }
@@ -59,6 +63,35 @@ public class GameController implements InputEventListener {
     @Override
     public void createNewGame() {
         board.newGame();
+        board.createNewBrick();
         viewGuiController.refreshGameBackground(board.getBoardMatrix());
+        viewGuiController.refreshBrick(board.getViewData());
+        viewGuiController.refreshHoldBrick();
+    }
+    
+    public void resetGame() {
+        board.newGame();
+    }
+    
+    public ViewData getGhostPosition() {
+        if (board instanceof SimpleBoard) {
+            return ((SimpleBoard) board).getGhostPosition();
+        }
+        return board.getViewData();
+    }
+    
+    public Score getScore() {
+        return board.getScore();
+    }
+    
+    public ViewData holdBrick() {
+        return board.holdBrick();
+    }
+    
+    public com.comp2042.logic.bricks.Brick getHeldBrick() {
+        if (board instanceof SimpleBoard) {
+            return ((SimpleBoard) board).getHeldBrick();
+        }
+        return null;
     }
 }

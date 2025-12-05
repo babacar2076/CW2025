@@ -15,6 +15,8 @@ public class SimpleBoard implements Board {
     private int[][] currentGameMatrix;
     private Point currentOffset;
     private final Score score;
+    private Brick heldBrick;
+    private boolean canHold = true;
 
     public SimpleBoard(int width, int height) {
         this.width = width;
@@ -99,6 +101,16 @@ public class SimpleBoard implements Board {
         return new ViewData(brickRotator.getCurrentShape(), (int) currentOffset.getX(), (int) currentOffset.getY(), brickGenerator.getNextBrick().getShapeMatrix().get(0));
     }
 
+    public ViewData getGhostPosition() {
+        int[][] shape = brickRotator.getCurrentShape();
+        int ghostY = (int) currentOffset.getY();
+        int[][] matrix = MatrixOperations.copy(currentGameMatrix);
+        while (!MatrixOperations.intersect(matrix, shape, (int) currentOffset.getX(), ghostY + 1)) {
+            ghostY++;
+        }
+        return new ViewData(shape, (int) currentOffset.getX(), ghostY, brickGenerator.getNextBrick().getShapeMatrix().get(0));
+    }
+
     @Override
     public void mergeBrickToBackground() {
         currentGameMatrix = MatrixOperations.merge(currentGameMatrix, brickRotator.getCurrentShape(), (int) currentOffset.getX(), (int) currentOffset.getY());
@@ -122,6 +134,39 @@ public class SimpleBoard implements Board {
     public void newGame() {
         currentGameMatrix = new int[width][height];
         score.reset();
+        heldBrick = null;
+        canHold = true;
         createNewBrick();
+    }
+    
+    @Override
+    public ViewData holdBrick() {
+        Brick currentBrick = brickRotator.getBrick();
+        if (heldBrick == null) {
+            if (!canHold) {
+                return getViewData();
+            }
+            heldBrick = currentBrick;
+            canHold = false;
+            Brick newBrick = brickGenerator.getBrick();
+            brickRotator.setBrick(newBrick);
+            currentOffset = new Point(4, 0);
+        } else {
+            // Allow swapping even if canHold is false
+            // Preserve current position when swapping
+            Brick temp = heldBrick;
+            heldBrick = currentBrick;
+            brickRotator.setBrick(temp);
+            // Keep currentOffset at its current position instead of resetting to top
+        }
+        return getViewData();
+    }
+    
+    public Brick getHeldBrick() {
+        return heldBrick;
+    }
+    
+    public void setCanHold(boolean canHold) {
+        this.canHold = canHold;
     }
 }
