@@ -159,7 +159,7 @@ public class GuiController implements Initializable {
         
         pausePanel.setVisible(false);
         pausePanel.setOnResume(e -> { pausePanel.setVisible(false); timeLine.play(); isPause.setValue(false); gamePanel.requestFocus(); });
-        pausePanel.setOnRestart(e -> { pausePanel.setVisible(false); if (eventListener != null && eventListener instanceof GameController) { ((GameController) eventListener).resetGame(); ((GameController) eventListener).getScore().reset(); } clearGameDisplay(); clearNextBlock(); clearHoldBlock(); if (eventListener != null) eventListener.createNewGame(); refreshHoldBrick(); gamePanel.requestFocus(); timeLine.play(); isPause.setValue(false); isGameOver.setValue(false); });
+        pausePanel.setOnRestart(e -> { pausePanel.setVisible(false); if (eventListener != null && eventListener instanceof GameController) { ((GameController) eventListener).resetGame(); ((GameController) eventListener).getScore().reset(); } clearGameDisplay(); clearNextBlock(); clearHoldBlock(); showGameElements(); if (eventListener != null) eventListener.createNewGame(); refreshHoldBrick(); gamePanel.requestFocus(); timeLine.play(); isPause.setValue(false); isGameOver.setValue(false); });
         pausePanel.setOnReturnToMenu(e -> { timeLine.stop(); pausePanel.setVisible(false); if (eventListener != null && eventListener instanceof GameController) { ((GameController) eventListener).resetGame(); } clearGameDisplay(); hideGameElements(); if (mainMenuPanel != null) mainMenuPanel.setVisible(true); isPause.setValue(false); isGameOver.setValue(false); });
         
         mainMenuPanel.setVisible(true);
@@ -240,8 +240,7 @@ public class GuiController implements Initializable {
 
         int speed;
         if (currentLevel == 6) {
-            speed = currentScore * 10;
-            if (speed < 100) speed = 100;
+            speed = calculateFinalLevelSpeed(currentScore);
         } else {
             speed = LEVEL_SPEEDS[currentLevel - 1];
         }
@@ -252,6 +251,23 @@ public class GuiController implements Initializable {
         timeLine.setCycleCount(Timeline.INDEFINITE);
         timeLine.play();
         refreshHoldBrick();
+    }
+
+    private int calculateFinalLevelSpeed(int score) {
+        // Tiered speed system: speed decreases (game gets faster) as score increases
+        if (score < 100) {
+            // From score 0 to 100: decrease from 400ms to 300ms
+            return 400 - ((score * 100) / 100);
+        } else if (score < 500) {
+            // From score 100 to 500: decrease from 300ms to 200ms
+            return 300 - ((score - 100) * 100 / 400);
+        } else if (score < 1000) {
+            // From score 500 to 1000: decrease from 200ms to 100ms
+            return 200 - ((score - 500) * 100 / 500);
+        } else {
+            // From score 1000+: stay at 100ms
+            return 100;
+        }
     }
 
     private Paint getFillColor(int i) {
@@ -451,7 +467,7 @@ public class GuiController implements Initializable {
                     }
                 }
                 if (currentLevel == 6 && timeLine != null) {
-                    int newSpeed = Math.max(100, score * 10);
+                    int newSpeed = calculateFinalLevelSpeed(score);
                     timeLine.stop();
                     timeLine = new Timeline(new KeyFrame(
                             Duration.millis(newSpeed),
