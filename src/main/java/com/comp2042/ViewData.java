@@ -8,14 +8,18 @@ public final class ViewData {
     private final int[][] nextBrickData;
 
     public ViewData(int[][] brickData, int xPosition, int yPosition, int[][] nextBrickData) {
-        this.brickData = brickData;
+        // Copy arrays on construction to ensure immutability
+        // This is the only place we need to copy - getters can return references safely
+        this.brickData = MatrixOperations.copy(brickData);
         this.xPosition = xPosition;
         this.yPosition = yPosition;
-        this.nextBrickData = nextBrickData;
+        this.nextBrickData = MatrixOperations.copy(nextBrickData);
     }
 
     public int[][] getBrickData() {
-        return MatrixOperations.copy(brickData);
+        // Return reference directly - ViewData is immutable (final fields)
+        // No need to copy on every getter call since the internal array never changes
+        return brickData;
     }
 
     public int getxPosition() {
@@ -27,6 +31,8 @@ public final class ViewData {
     }
 
     public int[][] getNextBrickData() {
-        return MatrixOperations.copy(nextBrickData);
+        // Return reference directly - ViewData is immutable (final fields)
+        // No need to copy on every getter call since the internal array never changes
+        return nextBrickData;
     }
 }

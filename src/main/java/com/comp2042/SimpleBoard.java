@@ -29,14 +29,16 @@ public class SimpleBoard implements Board {
 
     @Override
     public boolean moveBrickDown() {
-        int[][] currentMatrix = MatrixOperations.copy(currentGameMatrix);
-        Point p = new Point(currentOffset);
-        p.translate(0, 1);
-        boolean conflict = MatrixOperations.intersect(currentMatrix, brickRotator.getCurrentShape(), (int) p.getX(), (int) p.getY());
+        // Use matrix directly - intersect doesn't modify it, so no copy needed
+        // Calculate new position without creating new Point
+        int newX = (int) currentOffset.getX();
+        int newY = (int) currentOffset.getY() + 1;
+        boolean conflict = MatrixOperations.intersect(currentGameMatrix, brickRotator.getCurrentShape(), newX, newY);
         if (conflict) {
             return false;
         } else {
-            currentOffset = p;
+            // Reuse existing Point object by updating its coordinates
+            currentOffset.setLocation(newX, newY);
             return true;
         }
     }
@@ -44,37 +46,39 @@ public class SimpleBoard implements Board {
 
     @Override
     public boolean moveBrickLeft() {
-        int[][] currentMatrix = MatrixOperations.copy(currentGameMatrix);
-        Point p = new Point(currentOffset);
-        p.translate(-1, 0);
-        boolean conflict = MatrixOperations.intersect(currentMatrix, brickRotator.getCurrentShape(), (int) p.getX(), (int) p.getY());
+        // Use matrix directly - intersect doesn't modify it, so no copy needed
+        int newX = (int) currentOffset.getX() - 1;
+        int newY = (int) currentOffset.getY();
+        boolean conflict = MatrixOperations.intersect(currentGameMatrix, brickRotator.getCurrentShape(), newX, newY);
         if (conflict) {
             return false;
         } else {
-            currentOffset = p;
+            // Reuse existing Point object by updating its coordinates
+            currentOffset.setLocation(newX, newY);
             return true;
         }
     }
 
     @Override
     public boolean moveBrickRight() {
-        int[][] currentMatrix = MatrixOperations.copy(currentGameMatrix);
-        Point p = new Point(currentOffset);
-        p.translate(1, 0);
-        boolean conflict = MatrixOperations.intersect(currentMatrix, brickRotator.getCurrentShape(), (int) p.getX(), (int) p.getY());
+        // Use matrix directly - intersect doesn't modify it, so no copy needed
+        int newX = (int) currentOffset.getX() + 1;
+        int newY = (int) currentOffset.getY();
+        boolean conflict = MatrixOperations.intersect(currentGameMatrix, brickRotator.getCurrentShape(), newX, newY);
         if (conflict) {
             return false;
         } else {
-            currentOffset = p;
+            // Reuse existing Point object by updating its coordinates
+            currentOffset.setLocation(newX, newY);
             return true;
         }
     }
 
     @Override
     public boolean rotateLeftBrick() {
-        int[][] currentMatrix = MatrixOperations.copy(currentGameMatrix);
+        // Use matrix directly - intersect doesn't modify it, so no copy needed
         NextShapeInfo nextShape = brickRotator.getNextShape();
-        boolean conflict = MatrixOperations.intersect(currentMatrix, nextShape.getShape(), (int) currentOffset.getX(), (int) currentOffset.getY());
+        boolean conflict = MatrixOperations.intersect(currentGameMatrix, nextShape.getShape(), (int) currentOffset.getX(), (int) currentOffset.getY());
         if (conflict) {
             return false;
         } else {
@@ -104,11 +108,13 @@ public class SimpleBoard implements Board {
     public ViewData getGhostPosition() {
         int[][] shape = brickRotator.getCurrentShape();
         int ghostY = (int) currentOffset.getY();
-        int[][] matrix = MatrixOperations.copy(currentGameMatrix);
-        while (!MatrixOperations.intersect(matrix, shape, (int) currentOffset.getX(), ghostY + 1)) {
+        int currentX = (int) currentOffset.getX();
+        // Use matrix directly - intersect doesn't modify it, so no copy needed
+        // This eliminates copying 200 ints in a potentially long loop
+        while (!MatrixOperations.intersect(currentGameMatrix, shape, currentX, ghostY + 1)) {
             ghostY++;
         }
-        return new ViewData(shape, (int) currentOffset.getX(), ghostY, brickGenerator.getNextBrick().getShapeMatrix().get(0));
+        return new ViewData(shape, currentX, ghostY, brickGenerator.getNextBrick().getShapeMatrix().get(0));
     }
 
     @Override

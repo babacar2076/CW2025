@@ -1,11 +1,8 @@
 package com.comp2042.game.util;
 
 import com.comp2042.game.model.ClearRow;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Deque;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class MatrixOperations {
 
@@ -62,39 +59,54 @@ public class MatrixOperations {
     }
 
     public static ClearRow checkRemoving(final int[][] matrix) {
-        int[][] tmp = new int[matrix.length][matrix[0].length];
-        Deque<int[]> newRows = new ArrayDeque<>();
-        List<Integer> clearedRows = new ArrayList<>();
-
-        for (int i = 0; i < matrix.length; i++) {
-            int[] tmpRow = new int[matrix[i].length];
+        int rows = matrix.length;
+        int cols = matrix[0].length;
+        int[][] tmp = new int[rows][cols];
+        
+        // First pass: mark which rows need to be cleared using boolean array (O(1) lookup)
+        boolean[] shouldClear = new boolean[rows];
+        int clearedCount = 0;
+        for (int i = 0; i < rows; i++) {
             boolean rowToClear = true;
-            for (int j = 0; j < matrix[0].length; j++) {
+            // Early exit optimization: stop checking once we find an empty cell
+            for (int j = 0; j < cols; j++) {
                 if (matrix[i][j] == 0) {
                     rowToClear = false;
+                    break; // Early exit - no need to check rest of row
                 }
-                tmpRow[j] = matrix[i][j];
             }
             if (rowToClear) {
-                clearedRows.add(i);
-            } else {
-                newRows.add(tmpRow);
+                shouldClear[i] = true;
+                clearedCount++;
             }
         }
-        for (int i = matrix.length - 1; i >= 0; i--) {
-            int[] row = newRows.pollLast();
-            if (row != null) {
-                tmp[i] = row;
-            } else {
-                break;
+        
+        // Second pass: build result matrix by copying non-cleared rows from bottom up
+        // This avoids creating intermediate arrays and uses efficient System.arraycopy
+        int targetRow = rows - 1; // Start from bottom
+        for (int i = rows - 1; i >= 0; i--) {
+            if (!shouldClear[i]) {
+                // Direct array copy - faster than creating intermediate array
+                System.arraycopy(matrix[i], 0, tmp[targetRow], 0, cols);
+                targetRow--;
             }
         }
-        int scoreBonus = 50 * clearedRows.size() * clearedRows.size();
-        return new ClearRow(clearedRows.size(), tmp, scoreBonus);
+        
+        // Fill cleared rows at the top with zeros (already initialized, but explicit for clarity)
+        // Arrays are already initialized to 0, but this ensures correctness
+        
+        int scoreBonus = 50 * clearedCount * clearedCount;
+        return new ClearRow(clearedCount, tmp, scoreBonus);
     }
 
     public static List<int[][]> deepCopyList(List<int[][]> list){
-        return list.stream().map(MatrixOperations::copy).collect(Collectors.toList());
+        // Use traditional loop instead of stream for small collections (bricks have 4 rotations)
+        // This avoids stream overhead and is faster for small lists
+        List<int[][]> result = new ArrayList<>(list.size());
+        for (int[][] matrix : list) {
+            result.add(copy(matrix));
+        }
+        return result;
     }
 
 }

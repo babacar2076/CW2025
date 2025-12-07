@@ -240,38 +240,26 @@ public class GuiController implements Initializable {
     }
 
 
+    // Static array for color lookup - faster than switch statement
+    // Index directly corresponds to brick color value
+    private static final Paint[] COLOR_LOOKUP = {
+        Color.TRANSPARENT,  // 0
+        Color.AQUA,         // 1
+        Color.BLUEVIOLET,   // 2
+        Color.DARKGREEN,    // 3
+        Color.YELLOW,       // 4
+        Color.RED,          // 5
+        Color.BEIGE,        // 6
+        Color.BURLYWOOD     // 7
+    };
+    
     private Paint getFillColor(int i) {
-        Paint returnPaint;
-        switch (i) {
-            case 0:
-                returnPaint = Color.TRANSPARENT;
-                break;
-            case 1:
-                returnPaint = Color.AQUA;
-                break;
-            case 2:
-                returnPaint = Color.BLUEVIOLET;
-                break;
-            case 3:
-                returnPaint = Color.DARKGREEN;
-                break;
-            case 4:
-                returnPaint = Color.YELLOW;
-                break;
-            case 5:
-                returnPaint = Color.RED;
-                break;
-            case 6:
-                returnPaint = Color.BEIGE;
-                break;
-            case 7:
-                returnPaint = Color.BURLYWOOD;
-                break;
-            default:
-                returnPaint = Color.WHITE;
-                break;
+        // Array lookup is faster than switch for small, dense value sets
+        // Bounds check to prevent ArrayIndexOutOfBoundsException
+        if (i >= 0 && i < COLOR_LOOKUP.length) {
+            return COLOR_LOOKUP[i];
         }
-        return returnPaint;
+        return Color.WHITE; // Default for out-of-bounds values
     }
 
 
