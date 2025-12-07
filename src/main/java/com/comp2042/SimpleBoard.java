@@ -1,5 +1,10 @@
 package com.comp2042;
 
+import com.comp2042.game.model.ClearRow;
+import com.comp2042.game.model.Score;
+import com.comp2042.game.model.ViewData;
+import com.comp2042.game.util.MatrixOperations;
+import com.comp2042.game.util.NextShapeInfo;
 import com.comp2042.logic.bricks.Brick;
 import com.comp2042.logic.bricks.BrickGenerator;
 import com.comp2042.logic.bricks.RandomBrickGenerator;

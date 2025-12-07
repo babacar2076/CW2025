@@ -1,5 +1,9 @@
 package com.comp2042;
 
+import com.comp2042.game.model.ClearRow;
+import com.comp2042.game.model.Score;
+import com.comp2042.game.model.ViewData;
+
 public interface Board {
 
     boolean moveBrickDown();

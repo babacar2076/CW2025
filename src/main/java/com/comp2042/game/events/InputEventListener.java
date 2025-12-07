@@ -1,4 +1,7 @@
-package com.comp2042;
+package com.comp2042.game.events;
+
+import com.comp2042.game.model.DownData;
+import com.comp2042.game.model.ViewData;
 
 public interface InputEventListener {
 
@@ -12,3 +15,4 @@ public interface InputEventListener {
 
     void createNewGame();
 }
+

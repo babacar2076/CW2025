@@ -1,5 +1,13 @@
 package com.comp2042;
 
+import com.comp2042.game.events.EventSource;
+import com.comp2042.game.events.InputEventListener;
+import com.comp2042.game.events.MoveEvent;
+import com.comp2042.game.model.ClearRow;
+import com.comp2042.game.model.DownData;
+import com.comp2042.game.model.Score;
+import com.comp2042.game.model.ViewData;
+
 public class GameController implements InputEventListener {
 
     private Board board = new SimpleBoard(20, 10); //change the width from 30 to 20
