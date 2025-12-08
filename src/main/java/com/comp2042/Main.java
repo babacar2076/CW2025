@@ -4,13 +4,24 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
 import javafx.stage.Stage;
 
 import java.net.URL;
 import java.util.ResourceBundle;
 
+/**
+ * Main entry point for the Tetris game application.
+ * Initializes the JavaFX application, loads the FXML layout, and creates the game controller.
+ */
 public class Main extends Application {
 
+    /**
+     * Starts the JavaFX application by loading the FXML layout and initializing the game controller.
+     * @param primaryStage The primary stage for the application
+     * @throws Exception if there is an error loading the FXML file
+     */
     @Override
     public void start(Stage primaryStage) throws Exception {
 
@@ -26,9 +37,22 @@ public class Main extends Application {
         primaryStage.setResizable(false); //edit
         primaryStage.show();
         new GameController(c);
+        
+        // Play background music
+        URL musicUrl = getClass().getClassLoader().getResource("Original Tetris theme (Tetris Soundtrack).mp3");
+        if (musicUrl != null) {
+            Media media = new Media(musicUrl.toString());
+            MediaPlayer mediaPlayer = new MediaPlayer(media);
+            mediaPlayer.setCycleCount(MediaPlayer.INDEFINITE);
+            mediaPlayer.play();
+        }
     }
 
 
+    /**
+     * Main method that launches the JavaFX application.
+     * @param args Command line arguments (not used)
+     */
     public static void main(String[] args) {
         launch(args);
     }

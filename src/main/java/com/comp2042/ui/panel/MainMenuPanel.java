@@ -7,6 +7,10 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
+/**
+ * Main menu panel UI component displaying game title and navigation buttons.
+ * Provides options to start a new game, select levels, and view controls.
+ */
 public class MainMenuPanel extends BorderPane {
 
     private Button newGameButton;
@@ -15,6 +19,9 @@ public class MainMenuPanel extends BorderPane {
     private VBox controlsInfo;
     private boolean controlsVisible = false;
 
+    /**
+     * Constructs a new MainMenuPanel with all menu buttons and controls information.
+     */
     public MainMenuPanel() {
         getStyleClass().add("mainMenuPanel");
         VBox vbox = new VBox(20);

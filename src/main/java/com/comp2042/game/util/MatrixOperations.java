@@ -4,6 +4,10 @@ import com.comp2042.game.model.ClearRow;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Utility class providing static methods for matrix operations used in the game.
+ * Handles intersection detection, matrix copying, merging, and row clearing logic.
+ */
 public class MatrixOperations {
 
 
@@ -12,6 +16,14 @@ public class MatrixOperations {
 
     }
 
+    /**
+     * Checks if a brick intersects with the board at the specified position.
+     * @param matrix The game board matrix
+     * @param brick The brick shape matrix to check
+     * @param x The X coordinate to check
+     * @param y The Y coordinate to check
+     * @return true if there is an intersection or out-of-bounds, false otherwise
+     */
     public static boolean intersect(final int[][] matrix, final int[][] brick, int x, int y) {
         for (int i = 0; i < brick.length; i++) {
             for (int j = 0; j < brick[i].length; j++) {
@@ -33,6 +45,11 @@ public class MatrixOperations {
         return returnValue;
     }
 
+    /**
+     * Creates a deep copy of a 2D integer array.
+     * @param original The original matrix to copy
+     * @return A new 2D array with copied values
+     */
     public static int[][] copy(int[][] original) {
         int[][] myInt = new int[original.length][];
         for (int i = 0; i < original.length; i++) {
@@ -44,6 +61,14 @@ public class MatrixOperations {
         return myInt;
     }
 
+    /**
+     * Merges a brick into the board matrix at the specified position.
+     * @param filledFields The current board matrix
+     * @param brick The brick shape matrix to merge
+     * @param x The X coordinate where the brick should be merged
+     * @param y The Y coordinate where the brick should be merged
+     * @return A new board matrix with the brick merged into it
+     */
     public static int[][] merge(int[][] filledFields, int[][] brick, int x, int y) {
         int[][] copy = copy(filledFields);
         for (int i = 0; i < brick.length; i++) {
@@ -58,6 +83,12 @@ public class MatrixOperations {
         return copy;
     }
 
+    /**
+     * Checks the board for completed rows and removes them.
+     * Calculates score bonus based on the number of rows cleared.
+     * @param matrix The current board matrix
+     * @return ClearRow object containing the number of cleared rows, updated matrix, and score bonus
+     */
     public static ClearRow checkRemoving(final int[][] matrix) {
         int rows = matrix.length;
         int cols = matrix[0].length;
@@ -99,6 +130,11 @@ public class MatrixOperations {
         return new ClearRow(clearedCount, tmp, scoreBonus);
     }
 
+    /**
+     * Creates a deep copy of a list of 2D integer arrays.
+     * @param list The list of matrices to copy
+     * @return A new list containing deep copies of all matrices
+     */
     public static List<int[][]> deepCopyList(List<int[][]> list){
         // Use traditional loop instead of stream for small collections (bricks have 4 rotations)
         // This avoids stream overhead and is faster for small lists

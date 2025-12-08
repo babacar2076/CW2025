@@ -6,16 +6,23 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 
+/**
+ * Levels selection panel UI component.
+ * Displays buttons for selecting different game levels, with locked levels disabled.
+ */
 public class LevelsPanel extends BorderPane {
     
     private Button[] levelButtons = new Button[6];
     private Button backButton;
     
+    /**
+     * Constructs a new LevelsPanel with buttons for all 6 levels and a back button.
+     */
     public LevelsPanel() {
         getStyleClass().add("mainMenuPanel");
-        VBox vbox = new VBox(15);
+        VBox vbox = new VBox(5);
         vbox.setAlignment(javafx.geometry.Pos.CENTER);
-        Label titleLabel = new Label("SELECT LEVEL");
+        Label titleLabel = new Label("Levels");
         titleLabel.getStyleClass().add("menuTitle");
         
         for (int i = 0; i < 5; i++) {

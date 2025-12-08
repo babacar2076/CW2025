@@ -5,10 +5,17 @@ import com.comp2042.game.util.MatrixOperations;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * O-shaped brick (O-brick) implementation.
+ * A 2x2 square brick that does not rotate.
+ */
 final class OBrick implements Brick {
 
     private final List<int[][]> brickMatrix = new ArrayList<>();
 
+    /**
+     * Constructs an O-brick with its single rotation state (squares don't rotate).
+     */
     public OBrick() {
         brickMatrix.add(new int[][]{
                 {0, 0, 0, 0},

@@ -40,6 +40,10 @@ import javafx.util.Duration;
 import java.net.URL;
 import java.util.ResourceBundle;
 
+/**
+ * GUI controller that manages the visual representation of the game.
+ * Handles all UI interactions, keyboard input, game rendering, and coordinates between panels.
+ */
 public class GuiController implements Initializable {
 
     private static final int BRICK_SIZE = 20;

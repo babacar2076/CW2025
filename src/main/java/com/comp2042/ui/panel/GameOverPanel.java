@@ -6,12 +6,18 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 
-
+/**
+ * Game over panel UI component displayed when the game ends.
+ * Provides options to replay the game or return to the main menu.
+ */
 public class GameOverPanel extends BorderPane {
 
     private Button returnToMenuButton;
     private Button replayButton;
 
+    /**
+     * Constructs a new GameOverPanel with replay and return to menu buttons.
+     */
     public GameOverPanel() {
         getStyleClass().add("gameOverBackground");
         VBox vbox = new VBox(20);

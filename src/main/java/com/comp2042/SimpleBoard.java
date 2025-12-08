@@ -11,6 +11,10 @@ import com.comp2042.logic.bricks.RandomBrickGenerator;
 
 import java.awt.*;
 
+/**
+ * Concrete implementation of the Board interface.
+ * Manages the game board state, brick movements, rotations, and row clearing logic.
+ */
 public class SimpleBoard implements Board {
 
     private final int width;
@@ -23,6 +27,11 @@ public class SimpleBoard implements Board {
     private Brick heldBrick;
     private boolean canHold = true;
 
+    /**
+     * Constructs a new SimpleBoard with the specified dimensions.
+     * @param width The width of the board (number of columns)
+     * @param height The height of the board (number of rows)
+     */
     public SimpleBoard(int width, int height) {
         this.width = width;
         this.height = height;
@@ -110,6 +119,10 @@ public class SimpleBoard implements Board {
         return new ViewData(brickRotator.getCurrentShape(), (int) currentOffset.getX(), (int) currentOffset.getY(), brickGenerator.getNextBrick().getShapeMatrix().get(0));
     }
 
+    /**
+     * Gets the ghost position showing where the current brick will land.
+     * @return ViewData containing the ghost brick position and shape
+     */
     public ViewData getGhostPosition() {
         int[][] shape = brickRotator.getCurrentShape();
         int ghostY = (int) currentOffset.getY();
@@ -173,10 +186,18 @@ public class SimpleBoard implements Board {
         return getViewData();
     }
     
+    /**
+     * Gets the currently held brick.
+     * @return The held Brick object, or null if no brick is held
+     */
     public Brick getHeldBrick() {
         return heldBrick;
     }
     
+    /**
+     * Sets whether a brick can be held (prevents holding the same brick twice in a row).
+     * @param canHold true if a brick can be held, false otherwise
+     */
     public void setCanHold(boolean canHold) {
         this.canHold = canHold;
     }
