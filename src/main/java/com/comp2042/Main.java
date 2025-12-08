@@ -17,6 +17,8 @@ import java.util.ResourceBundle;
  */
 public class Main extends Application {
 
+    private static MediaPlayer mediaPlayer;
+
     /**
      * Starts the JavaFX application by loading the FXML layout and initializing the game controller.
      * @param primaryStage The primary stage for the application
@@ -38,12 +40,15 @@ public class Main extends Application {
         primaryStage.show();
         new GameController(c);
         
-        // Play background music
+        // Play background music with looping
         URL musicUrl = getClass().getClassLoader().getResource("Original Tetris theme (Tetris Soundtrack).mp3");
         if (musicUrl != null) {
             Media media = new Media(musicUrl.toString());
-            MediaPlayer mediaPlayer = new MediaPlayer(media);
-            mediaPlayer.setCycleCount(MediaPlayer.INDEFINITE);
+            mediaPlayer = new MediaPlayer(media);
+            mediaPlayer.setOnEndOfMedia(() -> {
+                mediaPlayer.seek(javafx.util.Duration.ZERO);
+                mediaPlayer.play();
+            });
             mediaPlayer.play();
         }
     }

@@ -1,1 +1,0 @@
-packageSearchIndex = [{"l":"All Packages","u":"allpackages-index.html"},{"l":"com.comp2042"},{"l":"com.comp2042.game.events"},{"l":"com.comp2042.game.model"},{"l":"com.comp2042.game.util"},{"l":"com.comp2042.logic.bricks"},{"l":"com.comp2042.service"},{"l":"com.comp2042.ui.panel"}];updateSearchResults();
