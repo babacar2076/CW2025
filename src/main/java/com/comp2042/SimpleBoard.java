@@ -1,11 +1,20 @@
 package com.comp2042;
 
+import com.comp2042.game.model.ClearRow;
+import com.comp2042.game.model.Score;
+import com.comp2042.game.model.ViewData;
+import com.comp2042.game.util.MatrixOperations;
+import com.comp2042.game.util.NextShapeInfo;
 import com.comp2042.logic.bricks.Brick;
 import com.comp2042.logic.bricks.BrickGenerator;
 import com.comp2042.logic.bricks.RandomBrickGenerator;
 
 import java.awt.*;
 
+/**
+ * Concrete implementation of the Board interface.
+ * Manages the game board state, brick movements, rotations, and row clearing logic.
+ */
 public class SimpleBoard implements Board {
 
     private final int width;
@@ -18,6 +27,11 @@ public class SimpleBoard implements Board {
     private Brick heldBrick;
     private boolean canHold = true;
 
+    /**
+     * Constructs a new SimpleBoard with the specified dimensions.
+     * @param width The width of the board (number of columns)
+     * @param height The height of the board (number of rows)
+     */
     public SimpleBoard(int width, int height) {
         this.width = width;
         this.height = height;
@@ -29,14 +43,16 @@ public class SimpleBoard implements Board {
 
     @Override
     public boolean moveBrickDown() {
-        int[][] currentMatrix = MatrixOperations.copy(currentGameMatrix);
-        Point p = new Point(currentOffset);
-        p.translate(0, 1);
-        boolean conflict = MatrixOperations.intersect(currentMatrix, brickRotator.getCurrentShape(), (int) p.getX(), (int) p.getY());
+        // Use matrix directly - intersect doesn't modify it, so no copy needed
+        // Calculate new position without creating new Point
+        int newX = (int) currentOffset.getX();
+        int newY = (int) currentOffset.getY() + 1;
+        boolean conflict = MatrixOperations.intersect(currentGameMatrix, brickRotator.getCurrentShape(), newX, newY);
         if (conflict) {
             return false;
         } else {
-            currentOffset = p;
+            // Reuse existing Point object by updating its coordinates
+            currentOffset.setLocation(newX, newY);
             return true;
         }
     }
@@ -44,37 +60,39 @@ public class SimpleBoard implements Board {
 
     @Override
     public boolean moveBrickLeft() {
-        int[][] currentMatrix = MatrixOperations.copy(currentGameMatrix);
-        Point p = new Point(currentOffset);
-        p.translate(-1, 0);
-        boolean conflict = MatrixOperations.intersect(currentMatrix, brickRotator.getCurrentShape(), (int) p.getX(), (int) p.getY());
+        // Use matrix directly - intersect doesn't modify it, so no copy needed
+        int newX = (int) currentOffset.getX() - 1;
+        int newY = (int) currentOffset.getY();
+        boolean conflict = MatrixOperations.intersect(currentGameMatrix, brickRotator.getCurrentShape(), newX, newY);
         if (conflict) {
             return false;
         } else {
-            currentOffset = p;
+            // Reuse existing Point object by updating its coordinates
+            currentOffset.setLocation(newX, newY);
             return true;
         }
     }
 
     @Override
     public boolean moveBrickRight() {
-        int[][] currentMatrix = MatrixOperations.copy(currentGameMatrix);
-        Point p = new Point(currentOffset);
-        p.translate(1, 0);
-        boolean conflict = MatrixOperations.intersect(currentMatrix, brickRotator.getCurrentShape(), (int) p.getX(), (int) p.getY());
+        // Use matrix directly - intersect doesn't modify it, so no copy needed
+        int newX = (int) currentOffset.getX() + 1;
+        int newY = (int) currentOffset.getY();
+        boolean conflict = MatrixOperations.intersect(currentGameMatrix, brickRotator.getCurrentShape(), newX, newY);
         if (conflict) {
             return false;
         } else {
-            currentOffset = p;
+            // Reuse existing Point object by updating its coordinates
+            currentOffset.setLocation(newX, newY);
             return true;
         }
     }
 
     @Override
     public boolean rotateLeftBrick() {
-        int[][] currentMatrix = MatrixOperations.copy(currentGameMatrix);
+        // Use matrix directly - intersect doesn't modify it, so no copy needed
         NextShapeInfo nextShape = brickRotator.getNextShape();
-        boolean conflict = MatrixOperations.intersect(currentMatrix, nextShape.getShape(), (int) currentOffset.getX(), (int) currentOffset.getY());
+        boolean conflict = MatrixOperations.intersect(currentGameMatrix, nextShape.getShape(), (int) currentOffset.getX(), (int) currentOffset.getY());
         if (conflict) {
             return false;
         } else {
@@ -101,14 +119,20 @@ public class SimpleBoard implements Board {
         return new ViewData(brickRotator.getCurrentShape(), (int) currentOffset.getX(), (int) currentOffset.getY(), brickGenerator.getNextBrick().getShapeMatrix().get(0));
     }
 
+    /**
+     * Gets the ghost position showing where the current brick will land.
+     * @return ViewData containing the ghost brick position and shape
+     */
     public ViewData getGhostPosition() {
         int[][] shape = brickRotator.getCurrentShape();
         int ghostY = (int) currentOffset.getY();
-        int[][] matrix = MatrixOperations.copy(currentGameMatrix);
-        while (!MatrixOperations.intersect(matrix, shape, (int) currentOffset.getX(), ghostY + 1)) {
+        int currentX = (int) currentOffset.getX();
+        // Use matrix directly - intersect doesn't modify it, so no copy needed
+        // This eliminates copying 200 ints in a potentially long loop
+        while (!MatrixOperations.intersect(currentGameMatrix, shape, currentX, ghostY + 1)) {
             ghostY++;
         }
-        return new ViewData(shape, (int) currentOffset.getX(), ghostY, brickGenerator.getNextBrick().getShapeMatrix().get(0));
+        return new ViewData(shape, currentX, ghostY, brickGenerator.getNextBrick().getShapeMatrix().get(0));
     }
 
     @Override
@@ -162,10 +186,18 @@ public class SimpleBoard implements Board {
         return getViewData();
     }
     
+    /**
+     * Gets the currently held brick.
+     * @return The held Brick object, or null if no brick is held
+     */
     public Brick getHeldBrick() {
         return heldBrick;
     }
     
+    /**
+     * Sets whether a brick can be held (prevents holding the same brick twice in a row).
+     * @param canHold true if a brick can be held, false otherwise
+     */
     public void setCanHold(boolean canHold) {
         this.canHold = canHold;
     }

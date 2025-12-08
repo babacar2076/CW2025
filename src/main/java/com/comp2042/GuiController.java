@@ -1,4 +1,19 @@
 package com.comp2042;
+import com.comp2042.game.events.EventSource;
+import com.comp2042.game.events.EventType;
+import com.comp2042.game.events.InputEventListener;
+import com.comp2042.game.events.MoveEvent;
+import com.comp2042.game.model.ClearRow;
+import com.comp2042.game.model.DownData;
+import com.comp2042.game.model.ViewData;
+import com.comp2042.service.FileManager;
+import com.comp2042.service.LevelManager;
+import com.comp2042.service.ScoreManager;
+import com.comp2042.ui.panel.GameOverPanel;
+import com.comp2042.ui.panel.LevelsPanel;
+import com.comp2042.ui.panel.MainMenuPanel;
+import com.comp2042.ui.panel.NotificationPanel;
+import com.comp2042.ui.panel.PausePanel;
 import javafx.scene.effect.DropShadow;
 import javafx.animation.KeyFrame;
 import javafx.scene.layout.BorderPane;
@@ -22,14 +37,13 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.util.Duration;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
-import java.util.Scanner;
 
+/**
+ * GUI controller that manages the visual representation of the game.
+ * Handles all UI interactions, keyboard input, game rendering, and coordinates between panels.
+ */
 public class GuiController implements Initializable {
 
     private static final int BRICK_SIZE = 20;
@@ -89,14 +103,9 @@ public class GuiController implements Initializable {
     @FXML
     private Label highScoreTextLabel;
 
-    private int highScore = 0;
-    private static final String HIGH_SCORE_FILE = "highscore.txt";
-    private static final String LEVELS_FILE = "levels.txt";
-    private int currentLevel = 1;
-    private boolean[] unlockedLevels = new boolean[6];
-    private int[] levelScores = new int[6];
-    private static final int[] LEVEL_SPEEDS = {600, 500, 400, 300, 200, 0};
-    private int currentScore = 0;
+    private final FileManager fileManager = new FileManager();
+    private final LevelManager levelManager = new LevelManager(fileManager);
+    private final ScoreManager scoreManager = new ScoreManager(fileManager);
 
     private Rectangle[][] displayMatrix;
 
@@ -163,24 +172,22 @@ public class GuiController implements Initializable {
         pausePanel.setOnReturnToMenu(e -> { timeLine.stop(); pausePanel.setVisible(false); if (eventListener != null && eventListener instanceof GameController) { ((GameController) eventListener).resetGame(); } clearGameDisplay(); hideGameElements(); if (mainMenuPanel != null) mainMenuPanel.setVisible(true); isPause.setValue(false); isGameOver.setValue(false); });
         
         mainMenuPanel.setVisible(true);
-        mainMenuPanel.setOnNewGame(e -> { currentLevel = 1; startNewGame(); });
+        mainMenuPanel.setOnNewGame(e -> { levelManager.resetToFirstLevel(); startNewGame(); });
         mainMenuPanel.setOnLevels(e -> { mainMenuPanel.setVisible(false); levelsPanel.setVisible(true); updateLevelsPanel(); });
         
         levelsPanel.setVisible(false);
         for (int i = 1; i <= 6; i++) {
             final int level = i;
-            levelsPanel.setOnLevelSelected(level, e -> { currentLevel = level; levelsPanel.setVisible(false); startNewGame(); });
+            levelsPanel.setOnLevelSelected(level, e -> { levelManager.setCurrentLevel(level); levelsPanel.setVisible(false); startNewGame(); });
         }
         levelsPanel.setOnBack(e -> { levelsPanel.setVisible(false); mainMenuPanel.setVisible(true); });
         mainMenuPanel.getControlsButton().setOnAction(e -> mainMenuPanel.toggleControls());
         
         hideGameElements();
         
-        loadHighScore();
-        loadLevels();
-        if (!unlockedLevels[0]) {
-            unlockedLevels[0] = true;
-            saveLevels();
+        // Initialize high score display
+        if (highScoreLabel != null) {
+            highScoreLabel.setText(String.valueOf(scoreManager.getHighScore()));
         }
 
         final Reflection reflection = new Reflection();
@@ -238,12 +245,7 @@ public class GuiController implements Initializable {
             }
         }
 
-        int speed;
-        if (currentLevel == 6) {
-            speed = calculateFinalLevelSpeed(currentScore);
-        } else {
-            speed = LEVEL_SPEEDS[currentLevel - 1];
-        }
+        int speed = levelManager.calculateSpeed(scoreManager.getCurrentScore());
         timeLine = new Timeline(new KeyFrame(
                 Duration.millis(speed),
                 ae -> moveDown(new MoveEvent(EventType.DOWN, EventSource.THREAD))
@@ -253,55 +255,27 @@ public class GuiController implements Initializable {
         refreshHoldBrick();
     }
 
-    private int calculateFinalLevelSpeed(int score) {
-        // Tiered speed system: speed decreases (game gets faster) as score increases
-        if (score < 100) {
-            // From score 0 to 100: decrease from 400ms to 300ms
-            return 400 - ((score * 100) / 100);
-        } else if (score < 500) {
-            // From score 100 to 500: decrease from 300ms to 200ms
-            return 300 - ((score - 100) * 100 / 400);
-        } else if (score < 1000) {
-            // From score 500 to 1000: decrease from 200ms to 100ms
-            return 200 - ((score - 500) * 100 / 500);
-        } else {
-            // From score 1000+: stay at 100ms
-            return 100;
-        }
-    }
 
+    // Static array for color lookup - faster than switch statement
+    // Index directly corresponds to brick color value
+    private static final Paint[] COLOR_LOOKUP = {
+        Color.TRANSPARENT,  // 0
+        Color.AQUA,         // 1
+        Color.BLUEVIOLET,   // 2
+        Color.DARKGREEN,    // 3
+        Color.YELLOW,       // 4
+        Color.RED,          // 5
+        Color.BEIGE,        // 6
+        Color.BURLYWOOD     // 7
+    };
+    
     private Paint getFillColor(int i) {
-        Paint returnPaint;
-        switch (i) {
-            case 0:
-                returnPaint = Color.TRANSPARENT;
-                break;
-            case 1:
-                returnPaint = Color.AQUA;
-                break;
-            case 2:
-                returnPaint = Color.BLUEVIOLET;
-                break;
-            case 3:
-                returnPaint = Color.DARKGREEN;
-                break;
-            case 4:
-                returnPaint = Color.YELLOW;
-                break;
-            case 5:
-                returnPaint = Color.RED;
-                break;
-            case 6:
-                returnPaint = Color.BEIGE;
-                break;
-            case 7:
-                returnPaint = Color.BURLYWOOD;
-                break;
-            default:
-                returnPaint = Color.WHITE;
-                break;
+        // Array lookup is faster than switch for small, dense value sets
+        // Bounds check to prevent ArrayIndexOutOfBoundsException
+        if (i >= 0 && i < COLOR_LOOKUP.length) {
+            return COLOR_LOOKUP[i];
         }
-        return returnPaint;
+        return Color.WHITE; // Default for out-of-bounds values
     }
 
 
@@ -452,22 +426,13 @@ public class GuiController implements Initializable {
             scoreLabel.textProperty().bind(integerProperty.asString());
             integerProperty.addListener((obs, oldVal, newVal) -> {
                 int score = newVal.intValue();
-                currentScore = score;
-                if (score > highScore) {
-                    highScore = score;
-                    if (highScoreLabel != null) highScoreLabel.setText(String.valueOf(highScore));
-                    saveHighScore();
+                boolean isNewHighScore = scoreManager.setCurrentScore(score);
+                if (isNewHighScore && highScoreLabel != null) {
+                    highScoreLabel.setText(String.valueOf(scoreManager.getHighScore()));
                 }
-                if (score >= 200 && currentLevel < 6) {
-                    int nextLevelIndex = currentLevel;
-                    if (!unlockedLevels[nextLevelIndex]) {
-                        unlockedLevels[nextLevelIndex] = true;
-                        levelScores[currentLevel - 1] = score;
-                        saveLevels();
-                    }
-                }
-                if (currentLevel == 6 && timeLine != null) {
-                    int newSpeed = calculateFinalLevelSpeed(score);
+                levelManager.checkAndUnlockLevel(score);
+                if (levelManager.isFinalLevel() && timeLine != null) {
+                    int newSpeed = levelManager.calculateSpeed(score);
                     timeLine.stop();
                     timeLine = new Timeline(new KeyFrame(
                             Duration.millis(newSpeed),
@@ -478,7 +443,7 @@ public class GuiController implements Initializable {
                 }
             });
         }
-        if (highScoreLabel != null) highScoreLabel.setText(String.valueOf(highScore));
+        if (highScoreLabel != null) highScoreLabel.setText(String.valueOf(scoreManager.getHighScore()));
     }
 
     public void gameOver() {
@@ -576,7 +541,7 @@ public class GuiController implements Initializable {
         if (mainMenuPanel != null) {
             mainMenuPanel.setVisible(false);
         }
-        currentScore = 0;
+        scoreManager.resetCurrentScore();
         showGameElements();
         if (currentScoreLabel != null) currentScoreLabel.setVisible(true);
         if (scoreLabel != null) scoreLabel.setVisible(true);
@@ -666,71 +631,10 @@ public class GuiController implements Initializable {
         holdBrickRectangles = null;
     }
     
-    private void loadHighScore() {
-        try {
-            File file = new File(HIGH_SCORE_FILE);
-            if (file.exists()) {
-                Scanner scanner = new Scanner(file);
-                if (scanner.hasNextInt()) {
-                    highScore = scanner.nextInt();
-                    if (highScoreLabel != null) {
-                        highScoreLabel.setText(String.valueOf(highScore));
-                    }
-                }
-                scanner.close();
-            }
-        } catch (FileNotFoundException e) {
-            // File doesn't exist yet, use default highScore = 0
-        }
-    }
-    
-    private void saveHighScore() {
-        try {
-            FileWriter writer = new FileWriter(HIGH_SCORE_FILE);
-            writer.write(String.valueOf(highScore));
-            writer.close();
-        } catch (IOException e) {
-            // Failed to save, ignore
-        }
-    }
-    
-    private void loadLevels() {
-        try {
-            File file = new File(LEVELS_FILE);
-            if (file.exists()) {
-                Scanner scanner = new Scanner(file);
-                for (int i = 0; i < 6 && scanner.hasNextBoolean(); i++) {
-                    unlockedLevels[i] = scanner.nextBoolean();
-                }
-                for (int i = 0; i < 6 && scanner.hasNextInt(); i++) {
-                    levelScores[i] = scanner.nextInt();
-                }
-                scanner.close();
-            }
-        } catch (FileNotFoundException e) {
-            // File doesn't exist yet, use defaults
-        }
-    }
-    
-    private void saveLevels() {
-        try {
-            FileWriter writer = new FileWriter(LEVELS_FILE);
-            for (int i = 0; i < 6; i++) {
-                writer.write(String.valueOf(unlockedLevels[i]) + " ");
-            }
-            writer.write("\n");
-            for (int i = 0; i < 6; i++) {
-                writer.write(String.valueOf(levelScores[i]) + " ");
-            }
-            writer.close();
-        } catch (IOException e) {
-            // Failed to save, ignore
-        }
-    }
     
     private void updateLevelsPanel() {
         for (int i = 1; i <= 6; i++) {
-            levelsPanel.setLevelEnabled(i, unlockedLevels[i - 1]);
+            levelsPanel.setLevelEnabled(i, levelManager.isLevelUnlocked(i));
         }
     }
 }

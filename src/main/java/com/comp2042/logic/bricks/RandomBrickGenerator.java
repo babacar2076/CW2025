@@ -7,6 +7,11 @@ import java.util.Deque;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
+/**
+ * Generates random Tetris bricks using a bag-based randomization system.
+ * Uses a 7-bag system to ensure fair distribution of brick types and prevent long sequences
+ * of the same brick type.
+ */
 public class RandomBrickGenerator implements BrickGenerator {
 
     private final List<Brick> brickList;
@@ -15,6 +20,9 @@ public class RandomBrickGenerator implements BrickGenerator {
     private final List<Brick> bag = new ArrayList<>();
     private Brick lastBrick = null;
 
+    /**
+     * Constructs a new RandomBrickGenerator and initializes the brick bag system.
+     */
     public RandomBrickGenerator() {
         brickList = new ArrayList<>();
         brickList.add(new IBrick());
